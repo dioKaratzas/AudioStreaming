@@ -12,6 +12,11 @@ open class AudioPlayer {
     /// The background handler for managing background tasks
     private let backgroundHandler = BackgroundHandler()
 
+    #if !os(macOS)
+        /// The session manager for handling audio session interruptions and route changes
+        private let audioSessionManager = AudioSessionManager.shared
+    #endif
+
     public var muted: Bool {
         get { playerContext.muted.value }
         set { playerContext.muted.write { $0 = newValue } }
@@ -178,12 +183,22 @@ open class AudioPlayer {
         configPlayerContext()
         configPlayerNode()
         setupEngine()
+
+        #if !os(macOS)
+            // Set the audio session manager's delegate to self
+            audioSessionManager.interruptionDelegate = self
+        #endif
     }
 
     deinit {
         playerContext.audioPlayingEntry?.close()
         clearQueue()
         rendererContext.clean()
+
+        #if !os(macOS)
+            // Remove as delegate when deinitializing
+            audioSessionManager.interruptionDelegate = nil
+        #endif
     }
 
     // MARK: Public
@@ -220,6 +235,15 @@ open class AudioPlayer {
 
         // Begin background task when starting playback
         backgroundHandler.beginBackgroundTask()
+
+        #if !os(macOS)
+            // Activate audio session before starting playback
+            do {
+                try audioSessionManager.activateSession()
+            } catch {
+                raiseUnexpected(error: .audioSystemError(.sessionSetupFailed))
+            }
+        #endif
 
         checkRenderWaitingAndNotifyIfNeeded()
         serializationQueue.sync {
@@ -365,6 +389,16 @@ open class AudioPlayer {
         serializationQueue.sync {
             stopEngine(reason: .userAction)
         }
+
+        #if !os(macOS)
+            // Deactivate audio session when stopping playback
+            do {
+                try audioSessionManager.deactivateSession()
+            } catch {
+                Logger.error("Error deactivating audio session: %@", category: .generic, args: error.localizedDescription)
+            }
+        #endif
+
         checkRenderWaitingAndNotifyIfNeeded()
         sourceQueue.async { [weak self] in
             guard let self else {
@@ -416,6 +450,17 @@ open class AudioPlayer {
         guard playerContext.internalState == .paused else {
             return
         }
+
+        #if !os(macOS)
+            // Ensure audio session is active when resuming
+            do {
+                try audioSessionManager.activateSession()
+            } catch {
+                raiseUnexpected(error: .audioSystemError(.sessionSetupFailed))
+                return
+            }
+        #endif
+
         playerContext.setInternalState(to: stateBeforePaused)
         serializationQueue.sync {
             do {
@@ -914,6 +959,46 @@ open class AudioPlayer {
         Logger.error("Error: %@", category: .generic, args: error.localizedDescription)
     }
 }
+
+#if !os(macOS)
+    extension AudioPlayer: AudioSessionInterruptionDelegate {
+        public func handleInterruption(type: AVAudioSession.InterruptionType, options: AVAudioSession.InterruptionOptions) {
+            switch type {
+            case .began:
+                // When audio session interruption begins, pause playback
+                if playerContext.internalState == .playing {
+                    pause()
+                }
+            case .ended:
+                // When interruption ends, resume playback if it was previously interrupted and the option indicates we should resume
+                if playerContext.internalState == .paused, options.contains(.shouldResume) {
+                    resume()
+                }
+            @unknown default:
+                break
+            }
+        }
+
+        public func handleRouteChange(reason: AVAudioSession.RouteChangeReason, previousRoute: AVAudioSessionRouteDescription) {
+            switch reason {
+            case .oldDeviceUnavailable:
+                // When headphones are unplugged or Bluetooth device disconnects, pause playback
+                if playerContext.internalState == .playing {
+                    pause()
+                }
+            case .newDeviceAvailable, .categoryChange:
+                // Try to restart the audio engine if needed
+                do {
+                    try startEngineIfNeeded()
+                } catch {
+                    raiseUnexpected(error: .audioSystemError(.engineFailure))
+                }
+            default:
+                break
+            }
+        }
+    }
+#endif
 
 extension AudioPlayer: AudioStreamSourceDelegate {
     public func dataAvailable(source: CoreAudioStreamSource, data: Data) {

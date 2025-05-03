@@ -24,9 +24,6 @@
         /// Delegate to handle audio session interruptions and route changes
         public weak var interruptionDelegate: AudioSessionInterruptionDelegate?
 
-        /// A Boolean value indicating whether background mode is enabled
-        public var backgroundMode = true
-
         /// A Boolean value indicating whether the audio session is active
         private(set) var isSessionActive = false
 
@@ -49,7 +46,7 @@
         public func setupSession(active: Bool) throws {
             let session = AVAudioSession.sharedInstance()
 
-            try session.setCategory(.playback, mode: .default, options: [.allowBluetooth, .allowAirPlay])
+            try session.setCategory(.playback, mode: .default, options: [.allowBluetooth, .allowAirPlay, .mixWithOthers])
             try session.setActive(active)
 
             isSessionActive = active
