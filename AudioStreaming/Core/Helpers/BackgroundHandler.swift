@@ -11,26 +11,11 @@
     import UIKit
 #endif
 
-#if !os(OSX)
-    /// Protocol for background task operations
-    protocol BackgroundTaskCreator {
-        func beginBackgroundTask(expirationHandler handler: (() -> Void)?) -> UIBackgroundTaskIdentifier
-        func endBackgroundTask(_ identifier: UIBackgroundTaskIdentifier)
-    }
-
-    // Make UIApplication conform to our protocol
-    extension UIApplication: BackgroundTaskCreator {
-        func beginBackgroundTask(expirationHandler handler: (() -> Void)?) -> UIBackgroundTaskIdentifier {
-            beginBackgroundTask(withName: "BackgroundTask", expirationHandler: handler)
-        }
-    }
-#endif
-
 /// A class that handles background tasks to prevent iOS from suspending the app while tasks are ongoing.
-final class BackgroundHandler: Sendable {
+final class BackgroundHandler: @unchecked Sendable {
     #if !os(OSX)
         /// The background task creator, typically `UIApplication.shared`.
-        var backgroundTaskCreator: BackgroundTaskCreator = UIApplication.shared
+        let backgroundTaskCreator: UIApplication = .shared
 
         /// The background task identifier if a background task has started. `nil` if not.
         @SynchronizedLock private var taskIdentifier: UIBackgroundTaskIdentifier?

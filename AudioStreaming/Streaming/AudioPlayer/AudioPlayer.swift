@@ -9,6 +9,9 @@ import CoreAudio
 open class AudioPlayer {
     public weak var delegate: AudioPlayerDelegate?
 
+    /// The background handler for managing background tasks
+    private let backgroundHandler = BackgroundHandler()
+
     public var muted: Bool {
         get { playerContext.muted.value }
         set { playerContext.muted.write { $0 = newValue } }
@@ -213,6 +216,10 @@ open class AudioPlayer {
 
     private func play(audioEntry: AudioEntry) {
         audioEntry.delegate = self
+        delegate?.audioPlayerWillStartPlaying(player: self, with: audioEntry.id)
+
+        // Begin background task when starting playback
+        backgroundHandler.beginBackgroundTask()
 
         checkRenderWaitingAndNotifyIfNeeded()
         serializationQueue.sync {
@@ -235,6 +242,12 @@ open class AudioPlayer {
     }
 
     public func playNextInQueue() {
+        let playingQueueEntryId = playerContext.audioPlayingEntry?.id ?? AudioEntryId(id: "")
+        delegate?.audioPlayerWillStartPlaying(player: self, with: playingQueueEntryId)
+
+        // Begin background task when playing next item
+        backgroundHandler.beginBackgroundTask()
+
         checkRenderWaitingAndNotifyIfNeeded()
         serializationQueue.sync {
             if entriesQueue.count(for: .upcoming) > 0 {
@@ -357,6 +370,10 @@ open class AudioPlayer {
             guard let self else {
                 return
             }
+
+            // End background task when stopping playback
+            self.backgroundHandler.endBackgroundTask()
+
             self.playerContext.audioReadingEntry?.delegate = nil
             self.playerContext.audioReadingEntry?.close()
             if let playingEntry = self.playerContext.audioPlayingEntry {
@@ -384,6 +401,10 @@ open class AudioPlayer {
                 pauseEngine()
             }
             playerContext.audioPlayingEntry?.suspend()
+
+            // Begin background task when pausing to allow buffering to continue
+            backgroundHandler.beginBackgroundTask()
+
             sourceQueue.async { [weak self] in
                 self?.processSource()
             }
@@ -415,7 +436,12 @@ open class AudioPlayer {
     /// Seeks the audio to the specified time.
     /// - Parameter time: A `Double` value specifying the time of the requested seek in seconds
     public func seek(to time: Double) {
+        // Begin a background task to ensure seeking completes
+        backgroundHandler.beginBackgroundTask()
+
         guard let playingEntry = playerContext.audioPlayingEntry else {
+            // End the background task if seeking not possible
+            backgroundHandler.endBackgroundTask()
             return
         }
         playingEntry.seekRequest.lock.lock()
@@ -432,7 +458,16 @@ open class AudioPlayer {
             checkRenderWaitingAndNotifyIfNeeded()
             sourceQueue.async { [weak self] in
                 self?.processSource()
+
+                // End the background task after seeking completes with a delay
+                // to ensure everything is processed
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    self?.backgroundHandler.endBackgroundTask()
+                }
             }
+        } else {
+            // End the background task if seek was already requested
+            backgroundHandler.endBackgroundTask()
         }
     }
 

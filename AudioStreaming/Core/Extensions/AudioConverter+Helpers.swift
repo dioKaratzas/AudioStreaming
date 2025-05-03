@@ -17,8 +17,8 @@ public enum AudioConverterError: CustomDebugStringConvertible, Sendable {
     case requiresPacketDescriptionsError
     case unspecifiedError
 
-    init(osstatus: OSStatus) {
-        switch osstatus {
+    init(osStatus: OSStatus) {
+        switch osStatus {
         case kAudioConverterErr_BadPropertySizeError:
             self = .badPropertySizeError
         case kAudioConverterErr_FormatNotSupported:

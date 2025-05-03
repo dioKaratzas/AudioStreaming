@@ -173,7 +173,7 @@ final class AudioFileStreamProcessor {
         if audioConverter == nil {
             let audioConverterStatus = AudioConverterNew(&inputFormat, &outputFormat, &audioConverter)
             guard audioConverterStatus == noErr else {
-                let audioConverterError = AudioConverterError(osstatus: audioConverterStatus)
+                let audioConverterError = AudioConverterError(osStatus: audioConverterStatus)
                 fileStreamCallback?(.raiseError(.audioSystemError(.converterError(audioConverterError))))
                 return
             }
