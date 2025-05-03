@@ -3,12 +3,11 @@
 //  Copyright © 2024 Decimal. All rights reserved.
 //
 
-import AudioStreaming
 import SwiftUI
+import AudioStreaming
 
 @main
 struct AudioPlayerApp: App {
-
     @State var model = AppModel()
 
     var body: some Scene {
@@ -21,10 +20,8 @@ struct AudioPlayerApp: App {
 
 @Observable
 class AppModel {
-    @ObservationIgnored
-    let audioPlayerService: AudioPlayerService
-    @ObservationIgnored
-    let equalizerService: EqualizerService
+    @ObservationIgnored let audioPlayerService: AudioPlayerService
+    @ObservationIgnored let equalizerService: EqualizerService
 
     init(
         audioPlayerService: AudioPlayerService = provideAudioPlayerService(),

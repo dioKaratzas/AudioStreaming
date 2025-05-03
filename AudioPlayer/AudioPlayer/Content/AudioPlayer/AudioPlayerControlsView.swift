@@ -2,8 +2,8 @@
 //  Created by Dimitris Chatzieleftheriou on 26/04/2024.
 //
 
-import AVFoundation
 import SwiftUI
+import AVFoundation
 import AudioStreaming
 
 struct AudioPlayerControls: View {
@@ -67,7 +67,7 @@ struct AudioPlayerControls: View {
             VStack {
                 Slider(
                     value: $model.currentTime,
-                    in: 0...(model.totalTime ?? 1.0),
+                    in: 0 ... (model.totalTime ?? 1.0),
                     onEditingChanged: { scrubStarted in
                         if scrubStarted {
                             model.scrubState = .started
@@ -94,7 +94,7 @@ struct AudioPlayerControls: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(.black)
-                Slider(value: $model.playbackRate, in: 1.0...4.0, step: 0.2)
+                Slider(value: $model.playbackRate, in: 1.0 ... 4.0, step: 0.2)
                     .onChange(of: model.playbackRate) { _, new in
                         model.update(rate: Float(new))
                     }
@@ -119,10 +119,8 @@ enum ScrubState: Equatable {
 extension AudioPlayerControls {
     @Observable
     final class Model {
-        @ObservationIgnored
-        private(set) var audioPlayerService: AudioPlayerService
-        @ObservationIgnored
-        private var displayLink: DisplayLink?
+        @ObservationIgnored private(set) var audioPlayerService: AudioPlayerService
+        @ObservationIgnored private var displayLink: DisplayLink?
 
         var isLiveAudioStreaming: Bool {
             totalTime == 0
@@ -196,7 +194,9 @@ extension AudioPlayerControls {
 
             Task { @MainActor in
                 for await metadata in await audioPlayerService.metadataReceivedNotifier.values() {
-                    guard !metadata.isEmpty else { break }
+                    guard !metadata.isEmpty else {
+                        break
+                    }
                     if let title = metadata["StreamTitle"] {
                         liveAudioMetadata = title.isEmpty ? "-" : title
                     } else {
@@ -262,7 +262,7 @@ extension AudioPlayerControls {
         }
 
         func createStreamSource() -> CoreAudioStreamSource {
-            return CustomStreamAudioSource(underlyingQueue: audioPlayerService.player.sourceQueue)
+            CustomStreamAudioSource(underlyingQueue: audioPlayerService.player.sourceQueue)
         }
 
         func onTick() {
@@ -277,7 +277,7 @@ extension AudioPlayerControls {
                     currentTime = progress
                 case .started:
                     break
-                case .ended(let seekTime):
+                case let .ended(seekTime):
                     currentTime = seekTime
                     if audioPlayerService.duration > 0 {
                         audioPlayerService.seek(at: seekTime)
@@ -327,5 +327,4 @@ extension AudioPlayerControls {
             displayLink?.deactivate()
         }
     }
-
 }

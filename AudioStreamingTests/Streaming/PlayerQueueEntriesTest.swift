@@ -3,22 +3,24 @@
 //  Copyright © 2020 Decimal. All rights reserved.
 //
 
+import Testing
 import AVFoundation
-import XCTest
-
 @testable import AudioStreaming
 
-class PlayerQueueEntriesTest: XCTestCase {
-    func testPlayerQueueEntriesInitsEmpty() {
+@Suite
+struct PlayerQueueEntriesTests {
+    @Test
+    func playerQueueEntriesInitsEmpty() {
         let queue = PlayerQueueEntries()
 
-        XCTAssertTrue(queue.isEmpty)
-        XCTAssertEqual(queue.count, 0)
-        XCTAssertEqual(queue.count(for: .buffering), 0)
-        XCTAssertEqual(queue.count(for: .upcoming), 0)
+        #expect(queue.isEmpty)
+        #expect(queue.isEmpty)
+        #expect(queue.count(for: .buffering) == 0)
+        #expect(queue.count(for: .upcoming) == 0)
     }
 
-    func testPlayerQueueCanEnqueueAndDequeueOnCorrectType() {
+    @Test
+    func playerQueueCanEnqueueAndDequeueOnCorrectType() {
         // given
         let queue = PlayerQueueEntries()
         let firstEntry = audioEntry(id: "1")
@@ -29,12 +31,13 @@ class PlayerQueueEntriesTest: XCTestCase {
         let entry1 = queue.dequeue(type: .buffering)
 
         // then
-        XCTAssertNotNil(entry)
-        XCTAssertNil(entry1)
-        XCTAssertEqual(firstEntry, entry)
+        #expect(entry != nil)
+        #expect(entry1 == nil)
+        #expect(firstEntry == entry)
     }
 
-    func testPlayerQueueCanEnqueueAndDequeue() {
+    @Test
+    func playerQueueCanEnqueueAndDequeue() {
         // given
         let queue = PlayerQueueEntries()
         let firstEntry = audioEntry(id: "1")
@@ -47,12 +50,13 @@ class PlayerQueueEntriesTest: XCTestCase {
         let entry1 = queue.dequeue(type: .buffering)
 
         // then
-        XCTAssertNotNil(entry)
-        XCTAssertNotNil(entry1)
-        XCTAssertEqual(firstEntry, entry)
+        #expect(entry != nil)
+        #expect(entry1 != nil)
+        #expect(firstEntry == entry)
     }
 
-    func testPlayerQueueCanOutputPendingAudioEntryIds() {
+    @Test
+    func playerQueueCanOutputPendingAudioEntryIds() {
         // given
         let queue = PlayerQueueEntries()
         let firstEntry = audioEntry(id: "1")
@@ -65,11 +69,12 @@ class PlayerQueueEntriesTest: XCTestCase {
         // then
         let expected = [firstEntry.id, secondEntry.id]
         let entries = queue.pendingEntriesId()
-        XCTAssertFalse(entries.isEmpty)
-        XCTAssertEqual(entries, expected)
+        #expect(!entries.isEmpty)
+        #expect(entries == expected)
     }
 
-    func testPlayerQueueEntriesCanSkipQueues() {
+    @Test
+    func playerQueueEntriesCanSkipQueues() {
         let queue = PlayerQueueEntries()
 
         let firstEntry = audioEntry(id: "1")
@@ -80,43 +85,45 @@ class PlayerQueueEntriesTest: XCTestCase {
         queue.skip(item: secondEntry, type: .buffering)
 
         let entry = queue.dequeue(type: .buffering)
-        XCTAssertEqual(entry, secondEntry)
+        #expect(entry == secondEntry)
 
         queue.skip(items: batchEntries, type: .buffering)
         let entry1 = queue.dequeue(type: .buffering)
-        XCTAssertEqual(entry1, batchEntries.last!)
+        #expect(entry1 == batchEntries.last!)
     }
 
-    func testPlayerQueueCountReturnsCorrectValue() {
+    @Test
+    func playerQueueCountReturnsCorrectValue() {
         let queue = PlayerQueueEntries()
 
         queue.enqueue(item: audioEntry(id: "1"), type: .buffering)
-        XCTAssertEqual(queue.count, 1)
-        XCTAssertEqual(queue.count(for: .buffering), 1)
-        XCTAssertEqual(queue.count(for: .upcoming), 0)
+        #expect(queue.count == 1)
+        #expect(queue.count(for: .buffering) == 1)
+        #expect(queue.count(for: .upcoming) == 0)
 
         queue.enqueue(item: audioEntry(id: "2"), type: .upcoming)
-        XCTAssertEqual(queue.count, 2)
-        XCTAssertEqual(queue.count(for: .buffering), 1)
-        XCTAssertEqual(queue.count(for: .upcoming), 1)
+        #expect(queue.count == 2)
+        #expect(queue.count(for: .buffering) == 1)
+        #expect(queue.count(for: .upcoming) == 1)
 
         queue.enqueue(item: audioEntry(id: "3"), type: .buffering)
-        XCTAssertEqual(queue.count, 3)
-        XCTAssertEqual(queue.count(for: .buffering), 2)
-        XCTAssertEqual(queue.count(for: .upcoming), 1)
+        #expect(queue.count == 3)
+        #expect(queue.count(for: .buffering) == 2)
+        #expect(queue.count(for: .upcoming) == 1)
 
         queue.enqueue(item: audioEntry(id: "4"), type: .upcoming)
-        XCTAssertEqual(queue.count, 4)
-        XCTAssertEqual(queue.count(for: .buffering), 2)
-        XCTAssertEqual(queue.count(for: .upcoming), 2)
+        #expect(queue.count == 4)
+        #expect(queue.count(for: .buffering) == 2)
+        #expect(queue.count(for: .upcoming) == 2)
 
         _ = queue.dequeue(type: .upcoming)
-        XCTAssertEqual(queue.count, 3)
-        XCTAssertEqual(queue.count(for: .buffering), 2)
-        XCTAssertEqual(queue.count(for: .upcoming), 1)
+        #expect(queue.count == 3)
+        #expect(queue.count(for: .buffering) == 2)
+        #expect(queue.count(for: .upcoming) == 1)
     }
 
-    func testPlayerQueueCanRemoveAllElemenets() {
+    @Test
+    func playerQueueCanRemoveAllElemenets() {
         let queue = PlayerQueueEntries()
 
         for i in 0 ..< 10 {
@@ -125,14 +132,15 @@ class PlayerQueueEntriesTest: XCTestCase {
         }
 
         queue.removeAll(for: .buffering)
-        XCTAssertEqual(queue.count(for: .buffering), 0)
-        XCTAssertEqual(queue.count(for: .upcoming), 10)
+        #expect(queue.count(for: .buffering) == 0)
+        #expect(queue.count(for: .upcoming) == 10)
 
         queue.removeAll(for: .upcoming)
-        XCTAssertEqual(queue.count(for: .upcoming), 0)
+        #expect(queue.count(for: .upcoming) == 0)
     }
 
-    func testPlayerQueueThreadSafety() {
+    @Test
+    func playerQueueThreadSafety() {
         var queue = PlayerQueueEntries()
 
         DispatchQueue.concurrentPerform(iterations: 100) { i in
@@ -142,7 +150,7 @@ class PlayerQueueEntriesTest: XCTestCase {
             _ = queue.dequeue(type: .upcoming)
         }
 
-        XCTAssertTrue(queue.isEmpty)
+        #expect(queue.isEmpty)
 
         queue = PlayerQueueEntries()
 
@@ -152,7 +160,7 @@ class PlayerQueueEntriesTest: XCTestCase {
             _ = queue.count(for: .buffering)
         }
 
-        XCTAssertEqual(queue.count(for: .buffering), 100)
+        #expect(queue.count(for: .buffering) == 100)
 
         queue = PlayerQueueEntries()
 
@@ -162,17 +170,19 @@ class PlayerQueueEntriesTest: XCTestCase {
             _ = queue.pendingEntriesId()
         }
 
-        XCTAssertEqual(queue.pendingEntriesId().count, 100)
+        #expect(queue.pendingEntriesId().count == 100)
     }
 }
 
 private let networkingClient = NetworkingClient(configuration: .ephemeral)
 private func audioEntry(id: String) -> AudioEntry {
     let source =
-        RemoteAudioSource(networking: networkingClient,
-                          url: URL(string: "www.a-url.com")!,
-                          underlyingQueue: DispatchQueue(label: "some-queue"),
-                          httpHeaders: [:])
+        RemoteAudioSource(
+            networking: networkingClient,
+            url: URL(string: "www.a-url.com")!,
+            underlyingQueue: DispatchQueue(label: "some-queue"),
+            httpHeaders: [:]
+        )
     let outputFormat = AVAudioFormat()
     return AudioEntry(source: source, entryId: AudioEntryId(id: id), outputAudioFormat: outputFormat)
 }

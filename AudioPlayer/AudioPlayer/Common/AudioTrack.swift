@@ -3,7 +3,6 @@
 //  Copyright © 2024 Decimal. All rights reserved.
 //
 
-
 import SwiftUI
 
 enum AudioTrackStatus {
@@ -31,6 +30,7 @@ public class AudioTrack: Identifiable, Equatable {
     public var id: String {
         url.absoluteString
     }
+
     let title: String
     let subtitle: String?
     let url: URL
@@ -47,7 +47,6 @@ public class AudioTrack: Identifiable, Equatable {
         self.content = content
     }
 }
-
 
 struct AudioTrackView: View {
     @Bindable var track: AudioTrack
@@ -111,10 +110,10 @@ struct AudioTrackView: View {
             track: AudioTrack(from: .enlefko, status: .playing)
         )
         AudioTrackView(
-            track:  AudioTrack(from: .enlefko, status: .paused)
+            track: AudioTrack(from: .enlefko, status: .paused)
         )
         AudioTrackView(
-            track:  AudioTrack(from: .enlefko, status: .error)
+            track: AudioTrack(from: .enlefko, status: .error)
         )
     }
 }

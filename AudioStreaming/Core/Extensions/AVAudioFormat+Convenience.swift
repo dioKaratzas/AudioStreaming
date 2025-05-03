@@ -10,6 +10,6 @@ public extension AVAudioFormat {
     ///
     /// This exposes the `pointee` value of the `UsafePointer<AudioStreamBasicDescription>`
     var basicStreamDescription: AudioStreamBasicDescription {
-        return streamDescription.pointee
+        streamDescription.pointee
     }
 }

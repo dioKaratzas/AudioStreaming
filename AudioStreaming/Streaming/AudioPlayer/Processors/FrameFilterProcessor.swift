@@ -9,8 +9,10 @@ import AVFoundation
 /// - parameter buffer: A buffer of audio captured from the output of an AVAudioNode.
 /// - parameter when: The time the buffer was captured.
 ///
-public typealias FilterCallback = (_ buffer: AVAudioPCMBuffer,
-                                   _ when: AVAudioTime) -> Void
+public typealias FilterCallback = (
+    _ buffer: AVAudioPCMBuffer,
+    _ when: AVAudioTime
+) -> Void
 
 /// A value type whose instances are used for frame filter
 /// - Note:
@@ -149,19 +151,27 @@ final class FrameFilterProcessor: NSObject, FrameFiltering {
 
     private func process(buffer: AVAudioPCMBuffer, when: AVAudioTime) {
         lock.lock(); defer { lock.unlock() }
-        guard !entries.isEmpty else { return }
+        guard !entries.isEmpty else {
+            return
+        }
         for entry in entries {
             entry.filter(buffer, when)
         }
     }
 
     private func installTapIfNeeded() {
-        guard !hasInstalledTap else { return }
+        guard !hasInstalledTap else {
+            return
+        }
         hasInstalledTap = true
         let format = mixerNode.outputFormat(forBus: 0)
         mixerNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, when in
-            guard let self = self else { return }
-            guard self.hasEntries else { return }
+            guard let self else {
+                return
+            }
+            guard self.hasEntries else {
+                return
+            }
             self.process(
                 buffer: buffer,
                 when: when

@@ -3,8 +3,8 @@
 //  Copyright © 2020 decimal. All rights reserved.
 //
 
-import Foundation
 import Network
+import Foundation
 
 enum NetConnectionType: Equatable {
     case cellular(connected: Bool)
@@ -17,9 +17,9 @@ enum NetConnectionType: Equatable {
         case let .cellular(connected),
              let .wifi(connected),
              let .other(connected):
-            return connected
+            connected
         default:
-            return false
+            false
         }
     }
 }
@@ -71,7 +71,9 @@ final class NetStatusService: NetStatusProvider {
     }
 
     func startIfNeeded() {
-        guard network.queue == nil else { return }
+        guard network.queue == nil else {
+            return
+        }
         network.start(queue: monitorQueue)
     }
 }

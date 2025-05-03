@@ -31,7 +31,7 @@ let package = Package(
                 .copy("Streaming/Metadata Stream Processor/raw-audio-streams/raw-stream-audio-no-metadata"),
                 .copy("Streaming/Metadata Stream Processor/raw-audio-streams/raw-stream-audio-normal-metadata"),
                 .copy("Streaming/Metadata Stream Processor/raw-audio-streams/raw-stream-audio-normal-metadata-alt")
-          ]
+            ]
         )
     ]
 )

@@ -3,8 +3,8 @@
 //  Copyright © 2020 Decimal. All rights reserved.
 //
 
-import Foundation
 import os
+import Foundation
 
 private let loggingSubsystem = "audio.streaming.log"
 
@@ -23,9 +23,9 @@ enum Logger {
 
         func toOSLog() -> OSLog {
             switch self {
-            case .audioRendering: return Logger.audioRendering
-            case .networking: return Logger.networking
-            case .generic: return Logger.generic
+            case .audioRendering: Logger.audioRendering
+            case .networking: Logger.networking
+            case .generic: Logger.generic
             }
         }
     }
@@ -47,7 +47,9 @@ enum Logger {
     }
 
     private static func process(_ message: StaticString, category: Category, type: OSLogType, args: CVarArg...) {
-        guard isEnabled else { return }
+        guard isEnabled else {
+            return
+        }
         os_log(message, log: category.toOSLog(), type: type, args)
     }
 }

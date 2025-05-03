@@ -25,7 +25,7 @@ struct BiMap<Left, Right> where Left: Hashable, Right: Hashable {
     subscript(_ left: Left) -> Right? {
         get { leftToRight[left] }
         set {
-            guard let newValue = newValue else {
+            guard let newValue else {
                 guard let right = leftToRight[left] else {
                     assertionFailure("inconsistency error: no right value found for left key")
                     return
@@ -42,7 +42,7 @@ struct BiMap<Left, Right> where Left: Hashable, Right: Hashable {
     subscript(_ right: Right) -> Left? {
         get { rightToLeft[right] }
         set {
-            guard let newValue = newValue else {
+            guard let newValue else {
                 guard let left = rightToLeft[right] else {
                     assertionFailure("inconsistency error: no left value found for right key")
                     return

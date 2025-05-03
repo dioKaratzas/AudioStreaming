@@ -35,11 +35,12 @@ final class FileAudioSource: NSObject, CoreAudioStreamSource {
 
     private var mp4Restructure: Mp4Restructure
 
-    init(url: URL,
-         fileManager: FileManager = .default,
-         underlyingQueue: DispatchQueue,
-         readSize: Int = 64 * 1024)
-    {
+    init(
+        url: URL,
+        fileManager: FileManager = .default,
+        underlyingQueue: DispatchQueue,
+        readSize: Int = 64 * 1024
+    ) {
         self.url = url
         self.underlyingQueue = underlyingQueue
         self.fileManager = fileManager
@@ -57,7 +58,7 @@ final class FileAudioSource: NSObject, CoreAudioStreamSource {
     }
 
     func close() {
-        guard let inputStream = inputStream else {
+        guard let inputStream else {
             return
         }
         CFReadStreamSetDispatchQueue(inputStream, nil)
@@ -69,7 +70,7 @@ final class FileAudioSource: NSObject, CoreAudioStreamSource {
     func suspend() {}
 
     func resume() {
-        guard let inputStream = inputStream else {
+        guard let inputStream else {
             return
         }
         CFReadStreamSetDispatchQueue(inputStream, underlyingQueue)
@@ -113,7 +114,9 @@ final class FileAudioSource: NSObject, CoreAudioStreamSource {
     }
 
     private func dataAvailable() {
-        guard let inputStream = inputStream else { return }
+        guard let inputStream else {
+            return
+        }
         let read = inputStream.read(buffer, maxLength: readSize)
         if read > 0 {
             let data = Data(bytes: buffer, count: read)

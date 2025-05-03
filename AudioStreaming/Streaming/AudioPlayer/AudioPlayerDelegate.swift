@@ -6,6 +6,9 @@
 import Foundation
 
 public protocol AudioPlayerDelegate: AnyObject {
+    /// Tells the delegate that the player will start playing.
+    func audioPlayerWillStartPlaying(player: AudioPlayer, with entryId: AudioEntryId)
+
     /// Tells the delegate that the player started player
     func audioPlayerDidStartPlaying(player: AudioPlayer, with entryId: AudioEntryId)
 
@@ -17,11 +20,13 @@ public protocol AudioPlayerDelegate: AnyObject {
     func audioPlayerStateChanged(player: AudioPlayer, with newState: AudioPlayerState, previous: AudioPlayerState)
 
     /// Tells the delegate that an entry has finished
-    func audioPlayerDidFinishPlaying(player: AudioPlayer,
-                                     entryId: AudioEntryId,
-                                     stopReason: AudioPlayerStopReason,
-                                     progress: Double,
-                                     duration: Double)
+    func audioPlayerDidFinishPlaying(
+        player: AudioPlayer,
+        entryId: AudioEntryId,
+        stopReason: AudioPlayerStopReason,
+        progress: Double,
+        duration: Double
+    )
     /// Tells the delegate when an unexpected error occurred.
     /// - note: Probably a good time to recreate the player when this occurs
     func audioPlayerUnexpectedError(player: AudioPlayer, error: AudioPlayerError)

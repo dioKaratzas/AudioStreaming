@@ -3,8 +3,8 @@
 //  Copyright © 2020 Decimal. All rights reserved.
 //
 
-import AudioToolbox
 import Foundation
+import AudioToolbox
 
 /// mapping from mime types to `AudioFileTypeID`
 let fileTypesFromMimeType: [String: AudioFileTypeID] =
@@ -40,7 +40,9 @@ let fileTypesFromMimeType: [String: AudioFileTypeID] =
 /// - parameter mimeType: A `String` of the type to be converted, eg `audio/mp3`
 /// - returns: `AudioFileTypeID` or 0 if not found
 func audioFileType(mimeType: String) -> AudioFileTypeID {
-    guard let fileType = fileTypesFromMimeType[mimeType] else { return 0 }
+    guard let fileType = fileTypesFromMimeType[mimeType] else {
+        return 0
+    }
     return fileType
 }
 
@@ -61,6 +63,8 @@ let fileTypesFromFileExtension: [String: AudioFileTypeID] =
     ]
 
 func audioFileType(fileExtension: String) -> AudioFileTypeID {
-    guard let fileType = fileTypesFromFileExtension[fileExtension] else { return 0 }
+    guard let fileType = fileTypesFromFileExtension[fileExtension] else {
+        return 0
+    }
     return fileType
 }

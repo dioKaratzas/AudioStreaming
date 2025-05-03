@@ -5,9 +5,8 @@
 //  Created by Jackson Harper on 12/9/24.
 //
 
-import AVFoundation
 import Foundation
-
+import AVFoundation
 import AudioStreaming
 
 // This is a basic example of playing a custom audio stream. We generate
@@ -121,7 +120,7 @@ private func createWaveHeader(data: Data) -> NSData {
 }
 
 private func intToByteArray(_ i: Int32) -> [UInt8] {
-    return [
+    [
         // little endian
         UInt8(truncatingIfNeeded: i & 0xFF),
         UInt8(truncatingIfNeeded: (i >> 8) & 0xFF),
@@ -131,7 +130,7 @@ private func intToByteArray(_ i: Int32) -> [UInt8] {
 }
 
 private func shortToByteArray(_ i: Int16) -> [UInt8] {
-    return [
+    [
         // little endian
         UInt8(truncatingIfNeeded: i & 0xFF),
         UInt8(truncatingIfNeeded: (i >> 8) & 0xFF),

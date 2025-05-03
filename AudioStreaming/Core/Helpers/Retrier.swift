@@ -31,7 +31,9 @@ final class Retrier {
     ///
     /// - Parameter callback: The method to be executed when timer is fired.
     func retry(callback: @escaping () -> Void) {
-        guard !timeoutTimer.isRunning else { return }
+        guard !timeoutTimer.isRunning else {
+            return
+        }
         self.callback = callback
         internalRetry()
     }

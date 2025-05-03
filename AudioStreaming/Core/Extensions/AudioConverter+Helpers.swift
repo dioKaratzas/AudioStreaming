@@ -47,25 +47,25 @@ public enum AudioConverterError: CustomDebugStringConvertible, Sendable {
     public var debugDescription: String {
         switch self {
         case .badPropertySizeError:
-            return "Bad property size"
+            "Bad property size"
         case .formatNotSupported:
-            return "Format not supported"
+            "Format not supported"
         case .inputSampleRateOutOfRange:
-            return "Input sample rate is out of range"
+            "Input sample rate is out of range"
         case .invalidInputSize:
-            return "Invalid input size"
+            "Invalid input size"
         case .invalidOutputSize:
-            return "The byte size is not an integer multiple of the frame size."
+            "The byte size is not an integer multiple of the frame size."
         case .operationNotSupported:
-            return "Operation not supported"
+            "Operation not supported"
         case .outputSampleRateOutOfRange:
-            return "Output sample rate out of range"
+            "Output sample rate out of range"
         case .propertyNotSupported:
-            return "Property not supported"
+            "Property not supported"
         case .requiresPacketDescriptionsError:
-            return "Required packet descriptions (error)"
+            "Required packet descriptions (error)"
         case .unspecifiedError:
-            return "Unspecified error "
+            "Unspecified error "
         }
     }
 }

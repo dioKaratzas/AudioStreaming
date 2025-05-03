@@ -4,9 +4,9 @@
 //
 
 #if os(iOS)
-import UIKit
+    import UIKit
 #else
-import AppKit
+    import AppKit
 #endif
 
 import Foundation
@@ -20,8 +20,7 @@ struct AudioPlaylist: Equatable, Identifiable {
 
 @Observable
 public class AudioPlayerModel {
-    @ObservationIgnored
-    private(set) var audioPlayerService: AudioPlayerService
+    @ObservationIgnored private(set) var audioPlayerService: AudioPlayerService
 
     var audioTracks: [AudioPlaylist] = []
 
@@ -63,14 +62,14 @@ private let customStreams: [AudioContent] = [.custom("custom://sinwave")]
 
 func audioTracksProvider() -> [AudioPlaylist] {
     [
-        AudioPlaylist(title: "Radio", tracks: radioTracks.map { AudioTrack.init(from: $0) }),
-        AudioPlaylist(title: "Tracks", tracks: audioTracks.map { AudioTrack.init(from:$0) }),
-        AudioPlaylist(title: "Generated", tracks: customStreams.map { AudioTrack.init(from:$0) })
+        AudioPlaylist(title: "Radio", tracks: radioTracks.map { AudioTrack(from: $0) }),
+        AudioPlaylist(title: "Tracks", tracks: audioTracks.map { AudioTrack(from: $0) }),
+        AudioPlaylist(title: "Generated", tracks: customStreams.map { AudioTrack(from: $0) })
     ]
 }
 
 func audioQueueTrackProvider() -> [AudioPlaylist] {
     [
-        AudioPlaylist(title: "Tracks", tracks: audioTracks.map { AudioTrack.init(from:$0) })
+        AudioPlaylist(title: "Tracks", tracks: audioTracks.map { AudioTrack(from: $0) })
     ]
 }

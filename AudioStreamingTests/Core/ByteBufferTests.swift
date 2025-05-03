@@ -1,11 +1,14 @@
 //
 // Copyright © Blockchain Luxembourg S.A. All rights reserved.
 
-import XCTest
+import Testing
+import Foundation
 @testable import AudioStreaming
 
-final class ByteBufferTests: XCTestCase {
-    func testWriteAndReadBytes() {
+@Suite
+struct ByteBufferTests {
+    @Test
+    func writeAndReadBytes() {
         var buffer = ByteBuffer(size: 10)
 
         // Write bytes to the buffer
@@ -13,16 +16,17 @@ final class ByteBufferTests: XCTestCase {
         buffer.writeBytes(testData)
         buffer.rewind()
 
-        // Read the written bytes
         do {
+            // Read the written bytes
             let readData = try buffer.readBytes(4)
-            XCTAssertEqual(readData, testData)
+            #expect(readData == testData)
         } catch {
-            XCTFail("Error reading bytes: \(error)")
+            Issue.record("Error reading bytes: \(error)")
         }
     }
 
-    func testWriteAndReadInteger() {
+    @Test
+    func writeAndReadInteger() {
         var buffer = ByteBuffer(size: 8)
 
         // Write integer to the buffer
@@ -30,16 +34,17 @@ final class ByteBufferTests: XCTestCase {
         buffer.put(testInteger)
         buffer.rewind()
 
-        // Read the written integer
         do {
+            // Read the written integer
             let readInteger: UInt32 = try buffer.getInteger()
-            XCTAssertEqual(readInteger, testInteger.bigEndian)
+            #expect(readInteger == testInteger.bigEndian)
         } catch {
-            XCTFail("Error reading integer: \(error)")
+            Issue.record("Error reading integer: \(error)")
         }
     }
 
-    func testWriteAndReadFloat() {
+    @Test
+    func writeAndReadFloat() {
         var buffer = ByteBuffer(size: 8)
 
         // Write float to the buffer
@@ -47,16 +52,17 @@ final class ByteBufferTests: XCTestCase {
         buffer.put(testFloat)
         buffer.rewind()
 
-        // Read the written float
         do {
+            // Read the written float
             let readFloat: Float = try buffer.getFloat()
-            XCTAssertEqual(readFloat, testFloat, accuracy: 0.001)
+            #expect(abs(readFloat - testFloat) < 0.001)
         } catch {
-            XCTFail("Error reading float: \(error)")
+            Issue.record("Error reading float: \(error)")
         }
     }
 
-    func testWriteAndReadDouble() {
+    @Test
+    func writeAndReadDouble() {
         var buffer = ByteBuffer(size: 8)
 
         // Write double to the buffer
@@ -64,12 +70,12 @@ final class ByteBufferTests: XCTestCase {
         buffer.put(testDouble)
         buffer.rewind()
 
-        // Read the written double
         do {
+            // Read the written double
             let readDouble: Double = try buffer.getDouble()
-            XCTAssertEqual(readDouble, testDouble, accuracy: 0.001)
+            #expect(abs(readDouble - testDouble) < 0.001)
         } catch {
-            XCTFail("Error reading double: \(error)")
+            Issue.record("Error reading double: \(error)")
         }
     }
 }

@@ -43,7 +43,9 @@ final class IcycastHeadersProcessor {
         let icyPrefix: [UInt8] = Array("ICY ".utf8)
         let httpPrefix: [UInt8] = Array("HTTP".utf8)
         return data.withUnsafeBytes { buffer -> (Data?, Data) in
-            guard !buffer.isEmpty else { return (nil, data) }
+            guard !buffer.isEmpty else {
+                return (nil, data)
+            }
             var bytesRead = 0
             let bytes = buffer.baseAddress!.assumingMemoryBound(to: UInt8.self)
             // Read through the bytes and stop when our search is complete
@@ -72,8 +74,7 @@ final class IcycastHeadersProcessor {
                 if icecastHeaders.count >= icyPrefix.count {
                     // in case the first 4 chars are not "ICY " nor "HTTP" then we stop the flow
                     if icecastHeaders[..<icyPrefix.count].elementsEqual(icyPrefix) == false,
-                       icecastHeaders[..<httpPrefix.count].elementsEqual(httpPrefix) == false
-                    {
+                       icecastHeaders[..<httpPrefix.count].elementsEqual(httpPrefix) == false {
                         iceHeaderAvailable = false
                         searchComplete = true
                     }

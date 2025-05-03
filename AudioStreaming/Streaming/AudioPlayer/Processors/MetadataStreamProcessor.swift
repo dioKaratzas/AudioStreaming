@@ -45,7 +45,7 @@ final class MetadataStreamProcessor: MetadataStreamSource {
     weak var delegate: MetadataStreamSourceDelegate?
 
     var canProcessMetadata: Bool {
-        return metadataStep > 0
+        metadataStep > 0
     }
 
     /// An `Int` read from http header value of `Icy-metaint` header
@@ -78,7 +78,9 @@ final class MetadataStreamProcessor: MetadataStreamSource {
     @inline(__always)
     func processMetadata(data: Data) -> Data {
         data.withUnsafeBytes { buffer -> Data in
-            guard !buffer.isEmpty else { return data }
+            guard !buffer.isEmpty else {
+                return data
+            }
             var audioData = Data()
             var bytesRead = 0
             let bytes = buffer.baseAddress!.assumingMemoryBound(to: UInt8.self)

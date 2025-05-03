@@ -6,32 +6,35 @@
 //  Copyright © 2020 Decimal. All rights reserved.
 //
 
-import XCTest
-
+import Testing
 @testable import AudioStreaming
 
-class BiMapTests: XCTestCase {
-    func test_BiMap_Can_Store_And_Retrieve_Values() {
+@Suite
+struct BiMapTests {
+    @Test
+    func biMapCanStoreAndRetrieveValues() {
         var map = BiMap<SomeClass, SomeOtherClass>()
         let someClass = SomeClass(item: 0)
         let someOtherClass = SomeOtherClass(item: 0)
         map[someClass] = someOtherClass
 
-        XCTAssertEqual(map[someClass], someOtherClass)
-        XCTAssertEqual(map[someOtherClass], someClass)
+        #expect(map[someClass] == someOtherClass)
+        #expect(map[someOtherClass] == someClass)
     }
 
-    func test_BiMap_Can_Retrieve_LeftAndRight_Values() {
+    @Test
+    func biMapCanRetrieveLeftAndRightValues() {
         var map = BiMap<SomeClass, SomeOtherClass>()
         let someClass = SomeClass(item: 0)
         let someOtherClass = SomeOtherClass(item: 0)
         map[someClass] = someOtherClass
 
-        XCTAssertEqual(map.leftValues, [someClass])
-        XCTAssertEqual(map.rightValues, [someOtherClass])
+        #expect(map.leftValues == [someClass])
+        #expect(map.rightValues == [someOtherClass])
     }
 
-    func test_BiMap_Can_Store_Using_Either_Value_As_Key() {
+    @Test
+    func biMapCanStoreUsingEitherValueAsKey() {
         var map = BiMap<SomeClass, SomeOtherClass>()
         let someClass = SomeClass(item: 0)
         let someOtherClass = SomeOtherClass(item: 0)
@@ -42,11 +45,12 @@ class BiMapTests: XCTestCase {
         // Storing using the left value as key
         map[someClass] = someOtherClass
 
-        XCTAssertEqual(map[someOtherClass], someClass)
-        XCTAssertEqual(map[someClass], someOtherClass)
+        #expect(map[someOtherClass] == someClass)
+        #expect(map[someClass] == someOtherClass)
     }
 
-    func test_BiMap_Can_Remove_Value_When_Passing_Nil() {
+    @Test
+    func biMapCanRemoveValueWhenPassingNil() {
         var map = BiMap<SomeClass, SomeOtherClass>()
         let someClass = SomeClass(item: 0)
         let someOtherClass = SomeOtherClass(item: 0)
@@ -60,8 +64,8 @@ class BiMapTests: XCTestCase {
         // Setting to nil
         map[someClass] = nil
 
-        XCTAssert(map.leftValues.isEmpty)
-        XCTAssert(map.rightValues.isEmpty)
+        #expect(map.leftValues.isEmpty)
+        #expect(map.rightValues.isEmpty)
     }
 }
 

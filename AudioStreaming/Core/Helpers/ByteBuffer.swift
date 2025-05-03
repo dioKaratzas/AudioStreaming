@@ -163,7 +163,7 @@ struct ByteBuffer {
 extension ExpressibleByIntegerLiteral {
     // Convert integer to Data
     var data: Data {
-        return withUnsafePointer(to: self) { pointer in
+        withUnsafePointer(to: self) { pointer in
             Data(bytes: pointer, count: MemoryLayout<Self>.size)
         }
     }

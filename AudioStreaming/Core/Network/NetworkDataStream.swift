@@ -72,14 +72,18 @@ final class NetworkDataStream {
 
     @discardableResult
     func resume() -> Self {
-        guard state.canBecome(.resumed) else { return self }
+        guard state.canBecome(.resumed) else {
+            return self
+        }
         state = .resumed
         task?.resume()
         return self
     }
 
     func cancel() {
-        guard state.canBecome(.cancelled) else { return }
+        guard state.canBecome(.cancelled) else {
+            return
+        }
         state = .cancelled
         streamCallback = nil
         task?.cancel()
@@ -87,7 +91,9 @@ final class NetworkDataStream {
     }
 
     func suspend() {
-        guard state.canBecome(.suspended) else { return }
+        guard state.canBecome(.suspended) else {
+            return
+        }
         state = .suspended
         task?.suspend()
     }
@@ -96,16 +102,24 @@ final class NetworkDataStream {
 
     func didReceive(response: HTTPURLResponse?) {
         underlyingQueue.async { [weak self] in
-            guard let self = self else { return }
-            guard let streamCallback = self.streamCallback else { return }
+            guard let self else {
+                return
+            }
+            guard let streamCallback = self.streamCallback else {
+                return
+            }
             streamCallback(.response(response))
         }
     }
 
     func didReceive(data: Data, response: HTTPURLResponse?) {
         underlyingQueue.async { [weak self] in
-            guard let self = self else { return }
-            guard let streamCallback = self.streamCallback else { return }
+            guard let self else {
+                return
+            }
+            guard let streamCallback = self.streamCallback else {
+                return
+            }
             let streamResponse = Response(response: response, data: data)
             streamCallback(.stream(.success(streamResponse)))
         }
@@ -113,9 +127,13 @@ final class NetworkDataStream {
 
     func didComplete(with error: Error?, response: HTTPURLResponse?) {
         underlyingQueue.async { [weak self] in
-            guard let self = self else { return }
-            guard let stream = self.streamCallback else { return }
-            if let error = error {
+            guard let self else {
+                return
+            }
+            guard let stream = self.streamCallback else {
+                return
+            }
+            if let error {
                 stream(.stream(.failure(error)))
             } else {
                 let completion = Completion(response: response, error: error)
@@ -143,21 +161,21 @@ extension NetworkDataStream.State {
     func canBecome(_ state: NetworkDataStream.State) -> Bool {
         switch (self, state) {
         case (.initialised, _):
-            return true
+            true
         case (_, .initialised),
              (.cancelled, _),
              (.finished, _):
-            return false
+            false
         case (.resumed, .cancelled),
              (.resumed, .suspended),
              (.suspended, .resumed),
              (.suspended, .cancelled):
-            return true
+            true
         case (.suspended, .suspended),
              (.resumed, .resumed):
-            return false
+            false
         case (_, .finished):
-            return true
+            true
         }
     }
 }

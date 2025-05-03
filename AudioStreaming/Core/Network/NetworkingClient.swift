@@ -17,13 +17,13 @@ public enum NetworkError: Error, Equatable {
     public static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
         switch (lhs, rhs) {
         case (.failure, failure):
-            return true
+            true
         case (.serverError, .serverError):
-            return true
+            true
         case (.missingData, .missingData):
-            return true
+            true
         default:
-            return false
+            false
         }
     }
 }
@@ -52,10 +52,11 @@ final class NetworkingClient {
     var tasksLock = UnfairLock()
     var tasks = BiMap<URLSessionTask, NetworkDataStream>()
 
-    init(configuration: URLSessionConfiguration = .networkingConfiguration,
-         delegate: NetworkSessionDelegate = NetworkSessionDelegate(),
-         networkQueue: DispatchQueue = DispatchQueue(label: "audio.streaming.session.network.queue"))
-    {
+    init(
+        configuration: URLSessionConfiguration = .networkingConfiguration,
+        delegate: NetworkSessionDelegate = NetworkSessionDelegate(),
+        networkQueue: DispatchQueue = DispatchQueue(label: "audio.streaming.session.network.queue")
+    ) {
         let delegateQueue = operationQueue(underlyingQueue: networkQueue)
         let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: delegateQueue)
         self.session = session
@@ -106,7 +107,9 @@ final class NetworkingClient {
     /// - parameter request: The `URLRequest` for the `stream`
     private func setupRequest(_ stream: NetworkDataStream, request: URLRequest) {
         tasksLock.lock(); defer { tasksLock.unlock() }
-        guard !stream.isCancelled else { return }
+        guard !stream.isCancelled else {
+            return
+        }
         let task = stream.task(for: request, using: session)
         tasks[stream] = task
     }

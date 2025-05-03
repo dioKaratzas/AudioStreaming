@@ -3,8 +3,8 @@
 //  Copyright © 2020 Decimal. All rights reserved.
 //
 
-import AudioToolbox.AudioFile
 import Foundation
+import AudioToolbox.AudioFile
 
 enum HeaderField {
     public static let acceptRanges = "Accept-Ranges"
@@ -25,7 +25,7 @@ struct HTTPHeaderParserOutput {
     let seekable: Bool
 
     var isMp4: Bool {
-        (typeId == kAudioFileMPEG4Type || typeId == kAudioFileM4AType)
+        typeId == kAudioFileMPEG4Type || typeId == kAudioFileM4AType
     }
 }
 
@@ -44,7 +44,9 @@ struct HTTPHeaderParser: HTTPHeaderParsing {
     typealias Output = HTTPHeaderParserOutput?
 
     func parse(input: HTTPURLResponse) -> HTTPHeaderParserOutput? {
-        guard let headers = input.allHeaderFields as? [String: String], headers.count > 2 else { return nil }
+        guard let headers = input.allHeaderFields as? [String: String], headers.count > 2 else {
+            return nil
+        }
 
         var typeId: UInt32 = 0
         if let contentType = input.mimeType {
@@ -54,7 +56,7 @@ struct HTTPHeaderParser: HTTPHeaderParsing {
         var fileLength = 0
         if input.statusCode == 200 {
             let contentLength = value(forHTTPHeaderField: HeaderField.contentLength, in: input)
-            if let contentLength = contentLength, let length = Int(contentLength) {
+            if let contentLength, let length = Int(contentLength) {
                 fileLength = length
             }
         } else if input.statusCode == 206 {
@@ -70,8 +72,7 @@ struct HTTPHeaderParser: HTTPHeaderParsing {
 
         var metadataStep = 0
         if let icyMetaint = value(forHTTPHeaderField: IcyHeaderField.icyMetaint, in: input),
-           let intValue = Int(icyMetaint)
-        {
+           let intValue = Int(icyMetaint) {
             metadataStep = intValue
         }
 
@@ -87,12 +88,12 @@ struct HTTPHeaderParser: HTTPHeaderParsing {
 extension Parser where Self: HTTPHeaderParsing {
     func value(forHTTPHeaderField field: String, in response: HTTPURLResponse) -> String? {
         if #available(iOS 13.0, *) {
-            return response.value(forHTTPHeaderField: field)
+            response.value(forHTTPHeaderField: field)
         } else {
             if let fields = response.allHeaderFields as? [String: String] {
-                return valueForCaseInsensitiveKey(field, fields: fields)
+                valueForCaseInsensitiveKey(field, fields: fields)
             } else {
-                return nil
+                nil
             }
         }
     }

@@ -1,0 +1,210 @@
+COMMIT ASSISTANCE
+----------------
+Shorthand: When the user types "gen commit", interpret this as a request to generate a commit message
+for the current staged changes. Immediately proceed with the steps below without asking for clarification.
+
+When asked to generate a commit message for changes, the assistant should:
+
+1. Proactively check git changes using a single terminal command:
+   - IMMEDIATELY suggest running `git diff --staged | cat && echo "\n\nGIT STATUS:\n" && git status | cat` WITHOUT asking for any additional details first
+   - This combined command shows both the diff and the status in a single execution
+   - Analyze the changes to understand their nature and purpose
+   - NEVER ask the user to describe the changes manually
+   - DO NOT wait for additional context before suggesting this command
+   - The goal is to minimize the number of approval requests to the user
+
+5. When generating commits, the assistant should:
+   - Follow conventional commit standards (feat:, fix:, docs:, style:, refactor:, perf:, test:, chore:, etc.)
+   - Focus on describing WHAT changed and WHY (not HOW)
+   - Keep the title concise (under 72 characters if possible)
+   - Use imperative verbs (Add, Fix, Update, Change, Remove)
+   - Include relevant context in the explanation when needed
+   - Mention any breaking changes clearly (using feat!: or fix!: for breaking changes)
+   - Keep descriptions minimal and compact, focusing only on essential changes
+   - Avoid overly detailed explanations unless specifically requested
+
+6. For commit messages with multiline descriptions:
+   - IMPORTANT: When using the terminal tool in Cursor, AVOID multi-line commands in a single terminal call
+   - Use the temporary file approach as the PRIMARY method to ensure compact formatting without unwanted empty lines:
+
+     Without ticket number:
+     ```
+     echo 'feat: Add new feature' > commit_msg.txt && echo '' >> commit_msg.txt && echo 'Summary:' >> commit_msg.txt && echo '- First point' >> commit_msg.txt && echo '- Second point' >> commit_msg.txt && echo '- Third point' >> commit_msg.txt && git commit -F commit_msg.txt && rm commit_msg.txt
+     ```
+   - As an alternative, you can use multiple -m flags (but note this will create separate paragraphs with empty lines):
+     
+     Without ticket number:
+     ```
+     git commit -m "feat: Add new feature" -m "Summary:" -m "- First point" -m "- Second point" -m "- Third point"
+     ```
+   - NEVER use escaped newlines (\n) within a single -m argument as they will appear literally
+   - AVOID heredoc (EOF) style commands as they cause errors in the Cursor terminal tool
+
+7. ALWAYS execute the commit command directly after generating the message:
+   - Do not just suggest or display the commit command
+   - Create and use a temporary file with a single command chain to handle the entire commit process
+   - If the single command approach doesn't work, then try using multiple -m flags as a fallback
+   - Confirm the commit was successful and provide feedback to the user
+   - If there are any issues with the commit, troubleshoot and try again with a modified approach
+
+8. Conventional commit types to use:
+   - feat: A new feature
+   - fix: A bug fix
+   - docs: Documentation only changes
+   - style: Changes that do not affect the meaning of the code (formatting, etc)
+   - refactor: A code change that neither fixes a bug nor adds a feature
+   - perf: A code change that improves performance
+   - test: Adding missing tests or correcting existing tests
+   - chore: Changes to the build process or auxiliary tools
+   - ci: Changes to CI configuration files and scripts
+   - build: Changes that affect the build system or external dependencies
+
+When asked to review code changes for commit message generation,
+the assistant will need the changed code or a description of the changes
+to generate an appropriate commit message and determine the correct tag.
+
+GENERAL INTERACTION RULES
+----------------
+- Always check if there are changed files between our chat discussions
+- Be concise and don't provide descriptive explanations unless explicitly asked
+- Only make changes that have been specifically requested
+- Maintain consistency with existing code patterns and styles in other parts of the app
+
+TESTING FRAMEWORKS
+----------------
+- Swift Testing framework (new):
+  - Import: `import Testing`
+  - Test structure: Use `@Test` macro on functions inside structs/enums/classes
+  - Assertion: Use `#expect(condition)` instead of XCTAssert methods
+  - Test suites: Use `@Suite` on structs/enums/classes
+  - Setup/teardown: Use struct initializers/deinitializers instead of setUp/tearDown methods
+  - Traits: Use `.disabled()`, `.enabled(if:)`, `.serialized`, `.timeLimit(...)`, `.tags(...)`
+  - Parameterized tests: Use `@Test(arguments: [])` for data-driven tests
+  - Known issues: Use `withKnownIssue { }` for tests expected to fail
+  - Optional unwrapping: Use `#require(optional)` instead of XCTUnwrap
+
+- XCTest framework (legacy):
+  - Import: `import XCTest`
+  - Test structure: Use classes that inherit from XCTestCase
+  - Assertion: Use XCTAssert methods (XCTAssertEqual, XCTAssertTrue, etc.)
+  - Setup/teardown: Use setUp() and tearDown() methods
+  - Optional unwrapping: Use XCTUnwrap
+
+PROJECT ARCHITECTURE
+----------------
+- Application type: Swift/SwiftUI app for macOS and iOS (PulseTuner)
+- Main project structure:
+  - Root App: `/PulseTuner` directory (main app entry point using SwiftUI)
+  - Swift Package Modules: `/Modules` (modular architecture)
+
+- Architecture pattern:
+  - ComposableArchitecture (TCA) - Main architectural framework
+  - Feature-based module organization (HomeFeature, PlayerFeature, SearchFeature, etc.)
+  - Module dependencies managed through Swift Package Manager
+
+- Design System:
+  - Custom design system in `Modules/AppUI/Sources/DesignSystem`
+  - Uses AvenirNextWorld custom font
+  - Consistent spacing/layout via AppMeasure
+  - ViewModifiers for consistent UI styling
+
+- Database:
+  - FluentKit ORM with SQLite (using SQLCipher for encryption)
+  - Database models in `Modules/AppDatabase/Sources/Models`
+  - AppDatabaseManager for database operations
+  
+- Dependencies:
+  - ComposableArchitecture: State management (TCA)
+  - FluentKit: ORM
+  - Kingfisher: Image loading/caching
+  - ZIPFoundation: ZIP file handling
+  - SwiftLocation: Location services
+  - FlagKit: Flag images
+  - Custom packages: 
+    - SwiftAudioKit (audio handling)
+    - FluentDTOMacro (database utilities)
+
+- Shared resources:
+  - AppCore: Core functionality and shared logic
+  - AppUI: UI components and design system
+
+CODING STANDARDS
+----------------
+- Follow Swift API Design Guidelines and Apple Human Interface Guidelines
+- Use strong typing with clear optionality
+- Use TCA (ComposableArchitecture) patterns consistently for all features
+- Implement platform-specific code using #if os(macOS) / #if os(iOS) conditionals
+- Group extensions by functionality in separate files
+- Use property wrappers (@Dependency, @Shared) for dependency injection
+- Prefer value types (structs) over reference types (classes) when possible
+- Follow SwiftUI lifecycle methods (@State, @Binding, etc.) appropriately
+- Place all strings in Localizable.xcstrings for localization
+
+STATE MANAGEMENT
+----------------
+- Use ComposableArchitecture (TCA) for state management
+- Each feature should define its own State, Action, and Reducer
+- Use Parent-Child feature composition following TCA patterns
+- State should be immutable and changed only through actions
+- Use BindingState/BindingAction for form fields
+- Keep reducers pure and use Effects for side effects
+- Use @Dependency for accessing services (database, networking, etc.)
+
+WORKFLOW SCENARIOS
+----------------
+- Feature development:
+  1. Create feature module in Modules directory
+  2. Define State, Action, Reducer following TCA pattern
+  3. Create View that presents the feature
+  4. Add feature to Package.swift
+  5. Import and use feature in appropriate parent module
+  
+- Database operations:
+  1. Define model in AppDatabase/Models
+  2. Implement migrations as needed
+  3. Add queries to AppDatabaseManager
+  4. Access through @Dependency(\.appDatabase)
+  
+- UI component creation:
+  1. Check existing components in AppUI first
+  2. Follow design system spacing/typography guidelines
+  3. Use existing ViewModifiers for consistent styling
+  4. For new patterns, add to DesignSystem
+
+SWIFT TESTING CONVERSION GUIDE
+----------------
+When converting tests from XCTest to Swift Testing:
+
+1. Import replacement:
+   - Replace `import XCTest` with `import Testing`
+
+2. Test class conversion:
+   - Replace `class MyTests: XCTestCase { ... }` with `@Suite struct MyTests { ... }`
+   - Or simply use `struct MyTests { ... }` as the compiler can infer it's a test suite
+
+3. Test method conversion:
+   - Replace `func testSomething() { ... }` with `@Test func something() { ... }`
+   - Remove the "test" prefix from method names
+
+4. Assertion conversion:
+   - Replace `XCTAssertEqual(a, b)` with `#expect(a == b)`
+   - Replace `XCTAssertTrue(condition)` with `#expect(condition)`
+   - Replace `XCTAssertFalse(condition)` with `#expect(!condition)`
+   - Replace `XCTAssertNil(value)` with `#expect(value == nil)`
+   - Replace `XCTAssertNotNil(value)` with `#expect(value != nil)`
+   - Replace `XCTAssertLessThan(a, b)` with `#expect(a < b)`
+   - Replace `XCTAssertGreaterThan(a, b)` with `#expect(a > b)`
+   - Replace `XCTAssertLessThanOrEqual(a, b)` with `#expect(a <= b)`
+   - Replace `XCTAssertGreaterThanOrEqual(a, b)` with `#expect(a >= b)`
+   - Replace `XCTFail(message)` with `Issue.record(message)`
+   - Replace `XCTUnwrap(optional)` with `#require(optional)`
+
+5. Test setup/teardown:
+   - Replace `setUp()` and `tearDown()` methods with initializers and deinitializers
+   - Use struct properties for test state, initialized in the struct initializer
+
+6. Add traits where needed:
+   - Add `.serialized` trait to tests that can't run in parallel
+   - Add `.timeLimit(.seconds(n))` for tests with time constraints
+   - Add `.disabled("reason")` for tests that should be skipped
+   - Add `.tags(.tagName)` for organizational purposes

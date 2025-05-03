@@ -3,8 +3,8 @@
 //  Copyright © 2020 Decimal. All rights reserved.
 //
 
-import AudioToolbox
 import Foundation
+import AudioToolbox
 
 public protocol AudioStreamSourceDelegate: AnyObject {
     /// Indicates that there's data available

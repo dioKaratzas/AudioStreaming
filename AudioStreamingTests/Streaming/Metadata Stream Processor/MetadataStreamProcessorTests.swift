@@ -6,14 +6,13 @@
 //  Copyright © 2020 Decimal. All rights reserved.
 //
 
-@testable import AudioStreaming
-
 import XCTest
+@testable import AudioStreaming
 
 class MetadataStreamProcessorTests: XCTestCase {
     var metadataDelegateSpy = MetadataDelegateSpy()
 
-    let bundle = Bundle(for: MetadataStreamProcessorTests.self)
+    let bundle = Bundle.module
 
     func test_Processor_SendsCorrectValues_IfItCanProcessMetadata() throws {
         let parser = MetadataParser()

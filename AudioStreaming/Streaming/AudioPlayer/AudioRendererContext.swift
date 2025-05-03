@@ -3,8 +3,8 @@
 //  Copyright © 2020 Decimal. All rights reserved.
 //
 
-import AVFoundation
 import CoreAudio
+import AVFoundation
 
 var maxFramesPerSlice: AVAudioFrameCount = 8192
 
@@ -44,8 +44,10 @@ final class AudioRendererContext {
 
         let bufferTotalFrameCount = UInt32(dataByteSize) / canonicalStream.mBytesPerFrame
 
-        bufferContext = BufferContext(sizeInBytes: canonicalStream.mBytesPerFrame,
-                                      totalFrameCount: bufferTotalFrameCount)
+        bufferContext = BufferContext(
+            sizeInBytes: canonicalStream.mBytesPerFrame,
+            totalFrameCount: bufferTotalFrameCount
+        )
     }
 
     func fillSilenceAudioBuffer() {

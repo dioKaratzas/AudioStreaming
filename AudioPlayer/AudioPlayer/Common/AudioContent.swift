@@ -25,70 +25,70 @@ enum AudioContent {
     var title: String {
         switch self {
         case .offradio:
-            return "Offradio"
+            "Offradio"
         case .enlefko:
-            return "Enlefko"
+            "Enlefko"
         case .pepper966:
-            return "Pepper 96.6"
+            "Pepper 96.6"
         case .kosmos:
-            return "Kosmos 93.6"
+            "Kosmos 93.6"
         case .kosmosJazz:
-            return "Kosmos Jazz"
+            "Kosmos Jazz"
         case .radiox:
-            return "Radio X"
+            "Radio X"
         case .khruangbin:
-            return "Khruangbin"
+            "Khruangbin"
         case .piano:
-            return "Piano"
+            "Piano"
         case .remoteWave:
-            return "Sample remote"
+            "Sample remote"
         case .local:
-            return "Jazzy Frenchy"
+            "Jazzy Frenchy"
         case .localWave:
-            return "Local file"
+            "Local file"
         case .optimized:
-            return "Jazzy Frenchy"
+            "Jazzy Frenchy"
         case .nonOptimized:
-            return "Jazzy Frenchy"
+            "Jazzy Frenchy"
         case .loopBeatFlac:
-            return "Beat loop"
-        case .custom(let url):
-            return url
+            "Beat loop"
+        case let .custom(url):
+            url
         }
     }
 
     var subtitle: String? {
         switch self {
         case .offradio:
-            return "Stream • offradio.gr"
+            "Stream • offradio.gr"
         case .enlefko:
-            return "Stream • enlefko.fm"
+            "Stream • enlefko.fm"
         case .pepper966:
-            return "Stream • pepper966.gr"
+            "Stream • pepper966.gr"
         case .kosmos:
-            return "Stream • ertecho.gr"
+            "Stream • ertecho.gr"
         case .kosmosJazz:
-            return "Stream • ertecho.gr"
+            "Stream • ertecho.gr"
         case .radiox:
-            return "Stream • globalplayer.com"
+            "Stream • globalplayer.com"
         case .khruangbin:
-            return "Remote mp3"
+            "Remote mp3"
         case .piano:
-            return "Remote mp3"
+            "Remote mp3"
         case .remoteWave:
-            return "wave"
+            "wave"
         case .local:
-            return "Music by: bensound.com"
+            "Music by: bensound.com"
         case .localWave:
-            return "Music by: bensound.com"
+            "Music by: bensound.com"
         case .optimized:
-            return "Music by: bensound.com - m4a optimized"
+            "Music by: bensound.com - m4a optimized"
         case .nonOptimized:
-            return "Music by: bensound.com - m4a non-optimized"
+            "Music by: bensound.com - m4a non-optimized"
         case .loopBeatFlac:
-            return "Remote flac"
+            "Remote flac"
         case .custom:
-            return ""
+            ""
         }
     }
 
@@ -124,7 +124,7 @@ enum AudioContent {
             return URL(string: "https://github.com/dimitris-c/sample-audio/raw/main/5-MB-WAV.wav")!
         case .loopBeatFlac:
             return URL(string: "https://github.com/dimitris-c/sample-audio/raw/main/drumbeat-loop.flac")!
-        case .custom(let url):
+        case let .custom(url):
             return URL(string: url)!
         }
     }

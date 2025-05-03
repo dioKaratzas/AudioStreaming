@@ -58,14 +58,18 @@ final class DispatchTimerSource {
 
     /// Activates the timer, if needed
     func activate() {
-        if state == .activated { return }
+        if state == .activated {
+            return
+        }
         state = .activated
         timer.resume()
     }
 
     /// Suspends the timer, if needed.
     func suspend() {
-        if state == .suspended { return }
+        if state == .suspended {
+            return
+        }
         state = .suspended
         timer.suspend()
     }

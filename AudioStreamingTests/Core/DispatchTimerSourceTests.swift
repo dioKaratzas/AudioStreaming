@@ -6,77 +6,112 @@
 //  Copyright © 2020 Decimal. All rights reserved.
 //
 
-import XCTest
+import Testing
+import Foundation
 @testable import AudioStreaming
 
-class DispatchTimerSourceTests: XCTestCase {
+@Suite
+struct DispatchTimerSourceTests {
     let dispatchKey = DispatchSpecificKey<Int>()
-
     let dispatchQueue = DispatchQueue(label: "some.queue")
-    var timerSource: DispatchTimerSource?
 
-    override func setUp() {
+    var timerSource: DispatchTimerSource {
+        DispatchTimerSource(interval: .milliseconds(100), queue: dispatchQueue)
+    }
+
+    init() {
         dispatchQueue.setSpecific(key: dispatchKey, value: 1)
-        timerSource = DispatchTimerSource(interval: .milliseconds(100), queue: dispatchQueue)
     }
 
-    override func tearDown() {
-        timerSource = nil
-    }
+    @Test
+    func dispatchTimerSourceCanBeActivatedAndSuspended() {
+        // Create a new instance for this test
+        let timerSource = self.timerSource
 
-    func test_DispatchTimerSource_Can_Be_Activated_and_Suspended() {
         // starts deactivated
-        XCTAssertFalse(timerSource!.isRunning)
+        #expect(!timerSource.isRunning)
 
         // when actiavated
-        timerSource!.activate()
+        timerSource.activate()
         // it should run
-        XCTAssertTrue(timerSource!.isRunning)
+        #expect(timerSource.isRunning)
 
         // when suspended
-        timerSource!.suspend()
+        timerSource.suspend()
         // it should not run
-        XCTAssertFalse(timerSource!.isRunning)
+        #expect(!timerSource.isRunning)
     }
 
-    func test_DispatchTimerSource_Can_Add_A_Handler_ToBe_Called() {
-        let expectaction = expectation(description: "fired")
+    @available(iOS 16.0, *)
+    @Test
+    func dispatchTimerSourceCanAddAHandlerToBeCalled() async throws {
+        var handlerCalled = false
+        let timerSource = self.timerSource
 
-        timerSource?.add {
-            expectaction.fulfill()
+        timerSource.add {
+            handlerCalled = true
         }
-        timerSource?.activate()
+        timerSource.activate()
 
-        wait(for: [expectaction], timeout: 1)
+        // Wait for handler to be called
+        for _ in 0 ..< 10 {
+            if handlerCalled {
+                break
+            }
+            try await Task.sleep(for: .milliseconds(200))
+        }
+
+        #expect(handlerCalled)
         // kill the timer
-        timerSource?.suspend()
+        timerSource.suspend()
     }
 
-    func test_DispatchTimerSource_Can_Remove_Handler() {
-        let expectaction = expectation(description: "fired")
+    @available(iOS 16.0, *)
+    @Test
+    func dispatchTimerSourceCanRemoveHandler() async throws {
+        var handlerCalled = false
+        let timerSource = self.timerSource
 
-        timerSource?.add {
-            expectaction.fulfill()
+        timerSource.add {
+            handlerCalled = true
         }
-        timerSource?.activate()
+        timerSource.activate()
 
-        wait(for: [expectaction], timeout: 1)
+        // Wait for handler to be called
+        for _ in 0 ..< 10 {
+            if handlerCalled {
+                break
+            }
+            try await Task.sleep(for: .milliseconds(200))
+        }
+
+        #expect(handlerCalled)
         // kill the timer
-        timerSource?.suspend()
-        timerSource?.removeHandler()
+        timerSource.suspend()
+        timerSource.removeHandler()
     }
 
-    func test_HandlerIsExecuted_On_The_Specified_Queue() {
-        let expectaction = expectation(description: "fired")
+    @available(iOS 16.0, *)
+    @Test
+    func handlerIsExecutedOnTheSpecifiedQueue() async throws {
+        var isOnCorrectQueue = false
+        let timerSource = self.timerSource
 
-        timerSource?.add {
-            XCTAssertEqual(DispatchQueue.getSpecific(key: self.dispatchKey), 1)
-            expectaction.fulfill()
+        timerSource.add {
+            isOnCorrectQueue = DispatchQueue.getSpecific(key: self.dispatchKey) == 1
         }
-        timerSource?.activate()
+        timerSource.activate()
 
-        wait(for: [expectaction], timeout: 1)
+        // Wait for handler to be called
+        for _ in 0 ..< 10 {
+            if isOnCorrectQueue {
+                break
+            }
+            try await Task.sleep(for: .milliseconds(200))
+        }
+
+        #expect(isOnCorrectQueue)
         // kill the timer
-        timerSource?.suspend()
+        timerSource.suspend()
     }
 }

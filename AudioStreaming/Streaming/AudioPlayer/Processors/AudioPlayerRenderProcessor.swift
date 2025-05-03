@@ -18,23 +18,26 @@ final class AudioPlayerRenderProcessor: NSObject {
     private let rendererContext: AudioRendererContext
     private let outputAudioFormat: AudioStreamBasicDescription
 
-    init(playerContext: AudioPlayerContext,
-         rendererContext: AudioRendererContext,
-         outputAudioFormat: AudioStreamBasicDescription)
-    {
+    init(
+        playerContext: AudioPlayerContext,
+        rendererContext: AudioRendererContext,
+        outputAudioFormat: AudioStreamBasicDescription
+    ) {
         self.playerContext = playerContext
         self.rendererContext = rendererContext
         self.outputAudioFormat = outputAudioFormat
     }
 
     func attachCallback(on player: AVAudioUnit, audioFormat: AVAudioFormat) {
-        if player.auAudioUnit.inputBusses.count > 0 {
+        if !player.auAudioUnit.inputBusses.isEmpty {
             do {
                 try player.auAudioUnit.inputBusses[0].setFormat(audioFormat)
             } catch {
-                Logger.error("Player auAudioUnit inputbus failure %@",
-                             category: .audioRendering,
-                             args: error.localizedDescription)
+                Logger.error(
+                    "Player auAudioUnit inputbus failure %@",
+                    category: .audioRendering,
+                    args: error.localizedDescription
+                )
             }
         }
         // set the max frames to render
@@ -67,7 +70,7 @@ final class AudioPlayerRenderProcessor: NSObject {
         let end = (bufferContext.frameStartIndex + bufferContext.frameUsedCount) % bufferContext.totalFrameCount
         let signal = rendererContext.waiting.value && used < bufferContext.totalFrameCount / 2
 
-        if let playingEntry = playingEntry {
+        if let playingEntry {
             playingEntry.lock.lock()
             let framesState = playingEntry.framesState
             playingEntry.lock.unlock()
@@ -78,8 +81,7 @@ final class AudioPlayerRenderProcessor: NSObject {
                     requiredFramesToStart = min(requiredFramesToStart, Double(playingEntry.framesState.lastFrameQueued))
                 }
 
-                if readingEntry === playingEntry, framesState.queued < Int(requiredFramesToStart)
-                {
+                if readingEntry === playingEntry, framesState.queued < Int(requiredFramesToStart) {
                     waitForBuffer = true
                 }
             } else if state == .rebuffering {
@@ -229,7 +231,7 @@ final class AudioPlayerRenderProcessor: NSObject {
                     playerContext.entriesLock.lock()
                     let newEntry = playerContext.audioPlayingEntry
                     playerContext.entriesLock.unlock()
-                    if let newEntry = newEntry {
+                    if let newEntry {
                         var framesPlayedForCurrent = extraFramesPlayedNotAssigned
 
                         newEntry.lock.lock()
@@ -285,7 +287,9 @@ final class AudioPlayerRenderProcessor: NSObject {
         let bytesTotal = rendererContext.inOutAudioBufferList[0].mBuffers.mDataByteSize
 
         if bytesTotal == 0 {
-            guard let renderStatus = renderStatus else { return noErr }
+            guard let renderStatus else {
+                return noErr
+            }
             switch renderStatus {
             case .success:
                 return noErr
@@ -312,7 +316,9 @@ final class AudioPlayerRenderProcessor: NSObject {
         inputBusNumber: Int,
         inputData: UnsafeMutablePointer<AudioBufferList>
     ) -> AUAudioUnitStatus {
-        guard inputBusNumber == 0 else { return noErr }
+        guard inputBusNumber == 0 else {
+            return noErr
+        }
         return render(
             inNumberFrames: inNumberFrames,
             ioData: inputData,

@@ -50,11 +50,15 @@ open class AudioPlayer {
     ///
     /// - Returns: A `Double` value indicating the total duration.
     public var duration: Double {
-        guard playerContext.internalState != .pendingNext else { return 0 }
+        guard playerContext.internalState != .pendingNext else {
+            return 0
+        }
         playerContext.entriesLock.lock()
         let playingEntry = playerContext.audioPlayingEntry
         playerContext.entriesLock.unlock()
-        guard let entry = playingEntry else { return 0 }
+        guard let entry = playingEntry else {
+            return 0
+        }
 
         let entryDuration = entry.duration()
         let progress = self.progress
@@ -66,11 +70,15 @@ open class AudioPlayer {
 
     /// The progress of the audio playback, in seconds.
     public var progress: Double {
-        guard playerContext.internalState != .pendingNext else { return 0 }
+        guard playerContext.internalState != .pendingNext else {
+            return 0
+        }
         playerContext.entriesLock.lock()
         let playingEntry = playerContext.audioPlayingEntry
         playerContext.entriesLock.unlock()
-        guard let entry = playingEntry else { return 0 }
+        guard let entry = playingEntry else {
+            return 0
+        }
         entry.seekRequest.lock.lock()
         let seekRequested = entry.seekRequest.requested
         let seekTime = entry.seekRequest.time
@@ -219,7 +227,9 @@ open class AudioPlayer {
         }
 
         sourceQueue.async { [weak self] in
-            guard let self = self else { return }
+            guard let self else {
+                return
+            }
             self.processSource()
         }
     }
@@ -238,7 +248,9 @@ open class AudioPlayer {
         }
 
         sourceQueue.async { [weak self] in
-            guard let self = self else { return }
+            guard let self else {
+                return
+            }
             self.processSource()
         }
     }
@@ -317,7 +329,7 @@ open class AudioPlayer {
     private func queue(audioEntry: AudioEntry, after afterUrl: URL? = nil) {
         serializationQueue.sync {
             audioEntry.delegate = self
-            if let afterUrl = afterUrl {
+            if let afterUrl {
                 if let afterUrlEntry = entriesQueue.items(type: .upcoming).first(where: { $0.id.id == afterUrl.absoluteString }) {
                     entriesQueue.insert(item: audioEntry, type: .upcoming, after: afterUrlEntry)
                 }
@@ -333,14 +345,18 @@ open class AudioPlayer {
 
     /// Stops the audio playback
     public func stop(clearQueue: Bool = true) {
-        guard playerContext.internalState != .stopped else { return }
+        guard playerContext.internalState != .stopped else {
+            return
+        }
 
         serializationQueue.sync {
             stopEngine(reason: .userAction)
         }
         checkRenderWaitingAndNotifyIfNeeded()
         sourceQueue.async { [weak self] in
-            guard let self = self else { return }
+            guard let self else {
+                return
+            }
             self.playerContext.audioReadingEntry?.delegate = nil
             self.playerContext.audioReadingEntry?.close()
             if let playingEntry = self.playerContext.audioPlayingEntry {
@@ -376,7 +392,9 @@ open class AudioPlayer {
 
     /// Resumes the audio playback, if previous paused
     public func resume() {
-        guard playerContext.internalState == .paused else { return }
+        guard playerContext.internalState == .paused else {
+            return
+        }
         playerContext.setInternalState(to: stateBeforePaused)
         serializationQueue.sync {
             do {
@@ -466,16 +484,20 @@ open class AudioPlayer {
             audioEngine.stop()
             playerRenderProcessor.renderBlock = audioEngine.manualRenderingBlock
 
-            try audioEngine.enableManualRenderingMode(.realtime,
-                                                      format: outputAudioFormat,
-                                                      maximumFrameCount: maxFramesPerSlice)
+            try audioEngine.enableManualRenderingMode(
+                .realtime,
+                format: outputAudioFormat,
+                maximumFrameCount: maxFramesPerSlice
+            )
 
             let inputBlock = { [playerRenderProcessor] frameCount -> UnsafePointer<AudioBufferList>? in
                 playerRenderProcessor.inRender(inNumberFrames: frameCount)
             }
 
-            let success = audioEngine.inputNode.setManualRenderingInputPCMFormat(outputAudioFormat,
-                                                                                 inputBlock: inputBlock)
+            let success = audioEngine.inputNode.setManualRenderingInputPCMFormat(
+                outputAudioFormat,
+                inputBlock: inputBlock
+            )
             guard success else {
                 assertionFailure("failure setting manual rendering mode")
                 return
@@ -493,7 +515,9 @@ open class AudioPlayer {
     /// and assigns it to the `player` variable.
     private func configPlayerNode() {
         AVAudioUnit.createAudioUnit(with: UnitDescriptions.output) { [weak self] result in
-            guard let self = self else { return }
+            guard let self else {
+                return
+            }
             switch result {
             case let .success(unit):
                 self.player = unit
@@ -508,14 +532,18 @@ open class AudioPlayer {
     /// Attaches callbacks to the `playerContext` and `renderProcessor`.
     private func configPlayerContext() {
         playerContext.stateChanged = { [weak self] oldValue, newValue in
-            guard let self = self else { return }
+            guard let self else {
+                return
+            }
             asyncOnMain {
                 self.delegate?.audioPlayerStateChanged(player: self, with: newValue, previous: oldValue)
             }
         }
 
         playerRenderProcessor.audioFinishedPlaying = { [weak self] entry in
-            guard let self = self else { return }
+            guard let self else {
+                return
+            }
             self.serializationQueue.sync {
                 let nextEntry = self.entriesQueue.dequeue(type: .buffering)
                 self.processFinishPlaying(entry: entry, with: nextEntry)
@@ -526,7 +554,9 @@ open class AudioPlayer {
         }
 
         fileStreamProcessor.fileStreamCallback = { [weak self] effect in
-            guard let self = self else { return }
+            guard let self else {
+                return
+            }
             switch effect {
             case .processSource:
                 self.sourceQueue.async {
@@ -588,7 +618,9 @@ open class AudioPlayer {
 
     /// Pauses the audio engine and stops the player's hardware
     private func pauseEngine() {
-        guard isEngineRunning else { return }
+        guard isEngineRunning else {
+            return
+        }
         audioEngine.reset()
         audioEngine.pause()
         player.auAudioUnit.stopHardware()
@@ -628,7 +660,9 @@ open class AudioPlayer {
     private func processSource() {
         dispatchPrecondition(condition: .onQueue(sourceQueue))
 
-        guard playerContext.internalState != .paused else { return }
+        guard playerContext.internalState != .paused else {
+            return
+        }
 
         if playerContext.internalState == .pendingNext {
             let entry = entriesQueue.dequeue(type: .upcoming)
@@ -637,8 +671,7 @@ open class AudioPlayer {
             rendererContext.resetBuffers()
         } else if let playingEntry = playerContext.audioPlayingEntry,
                   playingEntry.seekRequest.requested,
-                  playingEntry != playerContext.audioReadingEntry
-        {
+                  playingEntry != playerContext.audioReadingEntry {
             playingEntry.audioStreamState.processedDataFormat = false
             playingEntry.reset()
             if let readingEntry = playerContext.audioReadingEntry {
@@ -671,8 +704,7 @@ open class AudioPlayer {
 
         if let playingEntry = playerContext.audioPlayingEntry,
            playingEntry.audioStreamState.processedDataFormat,
-           playingEntry.calculatedBitrate() > 0.0
-        {
+           playingEntry.calculatedBitrate() > 0.0 {
             let currSeekVersion = playingEntry.seekRequest.version.value
             playingEntry.seekRequest.lock.lock()
             let originalSeekToTimeRequested = playingEntry.seekRequest.requested
@@ -692,13 +724,17 @@ open class AudioPlayer {
     }
 
     private func processSeekTime() {
-        assert(playerContext.audioReadingEntry === playerContext.audioPlayingEntry,
-               "reading and playing entry must be the same")
+        assert(
+            playerContext.audioReadingEntry === playerContext.audioPlayingEntry,
+            "reading and playing entry must be the same"
+        )
         fileStreamProcessor.processSeek()
     }
 
     private func setCurrentReading(entry: AudioEntry?, startPlaying: Bool, shouldClearQueue: Bool) {
-        guard let entry = entry else { return }
+        guard let entry else {
+            return
+        }
         Logger.debug("Setting current reading entry to: %@", category: .generic, args: entry.debugDescription)
         if startPlaying {
             rendererContext.fillSilenceAudioBuffer()
@@ -730,11 +766,13 @@ open class AudioPlayer {
 
     private func processFinishPlaying(entry: AudioEntry?, with nextEntry: AudioEntry?) {
         let playingEntry = playerContext.entriesLock.withLock { playerContext.audioPlayingEntry }
-        guard entry == playingEntry else { return }
+        guard entry == playingEntry else {
+            return
+        }
 
         let isPlayingSameItemProbablySeek = playerContext.audioPlayingEntry === nextEntry
 
-        if let nextEntry = nextEntry {
+        if let nextEntry {
             if !isPlayingSameItemProbablySeek {
                 nextEntry.lock.withLock {
                     nextEntry.seekTime = 0
@@ -748,13 +786,15 @@ open class AudioPlayer {
             let playingQueueEntryId = playerContext.audioPlayingEntry?.id ?? AudioEntryId(id: "")
             playerContext.entriesLock.unlock()
 
-            if let entry = entry, !isPlayingSameItemProbablySeek {
+            if let entry, !isPlayingSameItemProbablySeek {
                 let entryId = entry.id
                 let progressInFrames = entry.progressInFrames()
                 let progress = Double(progressInFrames) / outputAudioFormat.basicStreamDescription.mSampleRate
                 let duration = entry.duration()
                 asyncOnMain { [weak self] in
-                    guard let self else { return }
+                    guard let self else {
+                        return
+                    }
                     self.delegate?.audioPlayerDidFinishPlaying(
                         player: self,
                         entryId: entryId,
@@ -768,7 +808,9 @@ open class AudioPlayer {
                 playerContext.setInternalState(to: .waitingForData)
 
                 asyncOnMain { [weak self] in
-                    guard let self = self else { return }
+                    guard let self else {
+                        return
+                    }
                     self.delegate?.audioPlayerDidStartPlaying(player: self, with: playingQueueEntryId)
                 }
             }
@@ -776,14 +818,16 @@ open class AudioPlayer {
             playerContext.entriesLock.lock()
             playerContext.audioPlayingEntry = nil
             playerContext.entriesLock.unlock()
-            if let entry = entry, !isPlayingSameItemProbablySeek {
+            if let entry, !isPlayingSameItemProbablySeek {
                 let entryId = entry.id
                 let progressInFrames = entry.progressInFrames()
                 let progress = Double(progressInFrames) / outputAudioFormat.basicStreamDescription.mSampleRate
                 let duration = entry.duration()
 
                 sourceQueue.async { [weak self] in
-                    guard let self else { return }
+                    guard let self else {
+                        return
+                    }
                     self.processSource()
                     asyncOnMain {
                         self.delegate?.audioPlayerDidFinishPlaying(
@@ -809,7 +853,9 @@ open class AudioPlayer {
         entriesQueue.removeAll()
         if !pendingItems.isEmpty {
             asyncOnMain { [weak self] in
-                guard let self = self else { return }
+                guard let self else {
+                    return
+                }
                 self.delegate?.audioPlayerDidCancel(player: self, queuedItems: pendingItems)
             }
         }
@@ -825,7 +871,9 @@ open class AudioPlayer {
     private func raiseUnexpected(error: AudioPlayerError) {
         playerContext.setInternalState(to: .error)
         asyncOnMain { [weak self] in
-            guard let self = self else { return }
+            guard let self else {
+                return
+            }
             self.delegate?.audioPlayerUnexpectedError(player: self, error: error)
         }
         Logger.error("Error: %@", category: .generic, args: error.localizedDescription)
@@ -864,7 +912,9 @@ extension AudioPlayer: AudioStreamSourceDelegate {
     }
 
     public func errorOccurred(source: CoreAudioStreamSource, error: Error) {
-        guard let entry = playerContext.audioReadingEntry, entry.has(same: source) else { return }
+        guard let entry = playerContext.audioReadingEntry, entry.has(same: source) else {
+            return
+        }
         raiseUnexpected(error: .networkError(.failure(error)))
     }
 
@@ -877,8 +927,12 @@ extension AudioPlayer: AudioStreamSourceDelegate {
         }
         let queuedItemId = playerContext.audioReadingEntry?.id
         asyncOnMain { [weak self] in
-            guard let self = self else { return }
-            guard let itemId = queuedItemId else { return }
+            guard let self else {
+                return
+            }
+            guard let itemId = queuedItemId else {
+                return
+            }
             self.delegate?.audioPlayerDidFinishBuffering(player: self, with: itemId)
         }
 
@@ -900,14 +954,18 @@ extension AudioPlayer: AudioStreamSourceDelegate {
         playerContext.entriesLock.unlock()
 
         sourceQueue.async { [weak self] in
-            guard let self = self else { return }
+            guard let self else {
+                return
+            }
             self.processSource()
         }
     }
 
     public func metadataReceived(data: [String: String]) {
         asyncOnMain { [weak self] in
-            guard let self = self else { return }
+            guard let self else {
+                return
+            }
             self.delegate?.audioPlayerDidReadMetadata(player: self, metadata: data)
         }
     }

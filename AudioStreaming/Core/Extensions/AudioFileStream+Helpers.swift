@@ -81,36 +81,36 @@ public enum AudioFileStreamError: CustomDebugStringConvertible, Sendable {
     public var debugDescription: String {
         switch self {
         case .badPropertySize:
-            return "The size of the buffer you provided for property data was not correct."
+            "The size of the buffer you provided for property data was not correct."
         case .dataUnavailable:
-            return "The amount of data provided to the parser was insufficient to produce any result."
+            "The amount of data provided to the parser was insufficient to produce any result."
         case .discontinuityCantRecover:
-            return "A discontinuity has occurred in the audio data, and Audio File Stream Services cannot recover."
+            "A discontinuity has occurred in the audio data, and Audio File Stream Services cannot recover."
         case .illegalOperation:
-            return "An illegal operation was attempted."
+            "An illegal operation was attempted."
         case .invalidFile:
-            return "The file is malformed, not a valid instance of an audio file of its type, or not recognized as an audio file."
+            "The file is malformed, not a valid instance of an audio file of its type, or not recognized as an audio file."
         case .invalidPacketOffset:
-            return "A packet offset was less than 0, or past the end of the file, or a corrupt packet size was read when building the packet table."
+            "A packet offset was less than 0, or past the end of the file, or a corrupt packet size was read when building the packet table."
         case .notOptimized:
-            return """
+            """
             It is not possible to produce output packets because the
             streamed audio file's packet table or other defining information is not present or appears after the audio data.
             """
         case .unspecifiedError:
-            return "An unspecified error has occurred."
+            "An unspecified error has occurred."
         case .unsupportedDataFormat:
-            return "The data format is not supported by the specified file type."
+            "The data format is not supported by the specified file type."
         case .unsupportedFileType:
-            return "The specified file type is not supported."
+            "The specified file type is not supported."
         case .unsupportedProperty:
-            return "The property is not supported."
+            "The property is not supported."
         case .valueUnknown:
-            return "The property value is not present in this file before the audio data."
+            "The property value is not present in this file before the audio data."
         case .unknownError:
-            return "An unknown error occurred"
+            "An unknown error occurred"
         case .noError:
-            return "No error"
+            "No error"
         }
     }
 }
@@ -119,45 +119,45 @@ public extension AudioFileStreamPropertyID {
     var description: String {
         switch self {
         case kAudioFileStreamProperty_ReadyToProducePackets:
-            return "Ready to produce packets"
+            "Ready to produce packets"
         case kAudioFileStreamProperty_FileFormat:
-            return "File format"
+            "File format"
         case kAudioFileStreamProperty_DataFormat:
-            return "Data format"
+            "Data format"
         case kAudioFileStreamProperty_AudioDataByteCount:
-            return "Byte count"
+            "Byte count"
         case kAudioFileStreamProperty_AudioDataPacketCount:
-            return "Packet count"
+            "Packet count"
         case kAudioFileStreamProperty_DataOffset:
-            return "Data offset"
+            "Data offset"
         case kAudioFileStreamProperty_BitRate:
-            return "Bit rate"
+            "Bit rate"
         case kAudioFileStreamProperty_FormatList:
-            return "Format list"
+            "Format list"
         case kAudioFileStreamProperty_MagicCookieData:
-            return "Magic cookie"
+            "Magic cookie"
         case kAudioFileStreamProperty_MaximumPacketSize:
-            return "Max packet size"
+            "Max packet size"
         case kAudioFileStreamProperty_ChannelLayout:
-            return "Channel layout"
+            "Channel layout"
         case kAudioFileStreamProperty_PacketToFrame:
-            return "Packet to frame"
+            "Packet to frame"
         case kAudioFileStreamProperty_FrameToPacket:
-            return "Frame to packet"
+            "Frame to packet"
         case kAudioFileStreamProperty_PacketToByte:
-            return "Packet to byte"
+            "Packet to byte"
         case kAudioFileStreamProperty_ByteToPacket:
-            return "Byte to packet"
+            "Byte to packet"
         case kAudioFileStreamProperty_PacketTableInfo:
-            return "Packet table"
+            "Packet table"
         case kAudioFileStreamProperty_PacketSizeUpperBound:
-            return "Packet size upper bound"
+            "Packet size upper bound"
         case kAudioFileStreamProperty_AverageBytesPerPacket:
-            return "Average bytes per packet"
+            "Average bytes per packet"
         case kAudioFileStreamProperty_InfoDictionary:
-            return "Info dictionary"
+            "Info dictionary"
         default:
-            return "Unknown"
+            "Unknown"
         }
     }
 }

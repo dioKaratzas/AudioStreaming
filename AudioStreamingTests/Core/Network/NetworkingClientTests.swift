@@ -19,9 +19,11 @@ class NetworkingClientTests: XCTestCase {
         let delegate = NetworkSessionDelegate()
         let queue = DispatchQueue(label: "temp.queue")
 
-        let networking = NetworkingClient(configuration: configuration,
-                                          delegate: delegate,
-                                          networkQueue: queue)
+        let networking = NetworkingClient(
+            configuration: configuration,
+            delegate: delegate,
+            networkQueue: queue
+        )
 
         XCTAssertNotNil(networking.session)
         XCTAssertTrue(networking.delegate === networking.session.delegate)

@@ -17,7 +17,9 @@ struct MetadataParser: Parser {
     typealias Output = MetadataOutput
 
     func parse(input: Data) -> MetadataOutput {
-        guard let string = String(data: input, encoding: .utf8) else { return .failure(.unableToParse) }
+        guard let string = String(data: input, encoding: .utf8) else {
+            return .failure(.unableToParse)
+        }
         // remove added bytes (zeros) and separate the string on every ';' char
         let pairs = string.trimmingCharacters(in: CharacterSet(charactersIn: "\0")).components(separatedBy: ";")
         let metadata = pairs.reduce(into: [String: String]()) { result, next in
@@ -28,12 +30,13 @@ struct MetadataParser: Parser {
             )
             .map(String.init)
             if let key = split.first,
-               let value = split.last?.replacingOccurrences(of: "'", with: ""), !key.isEmpty
-            {
+               let value = split.last?.replacingOccurrences(of: "'", with: ""), !key.isEmpty {
                 result[key] = value
             }
         }
-        guard !metadata.isEmpty else { return .failure(.empty) }
+        guard !metadata.isEmpty else {
+            return .failure(.empty)
+        }
         return .success(metadata)
     }
 }

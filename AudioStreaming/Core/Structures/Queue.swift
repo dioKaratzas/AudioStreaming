@@ -41,7 +41,9 @@ final class Queue<Element: Equatable>: Sequence, CustomDebugStringConvertible {
 
     /// Removes and returns the last item
     func dequeue() -> Element? {
-        guard !isEmpty else { return nil }
+        guard !isEmpty else {
+            return nil
+        }
         return _storage.removeLast()
     }
 
@@ -59,7 +61,7 @@ final class Queue<Element: Equatable>: Sequence, CustomDebugStringConvertible {
 
     /// Inserts an item at a specific index in the queue
     func insert(item: Element, at index: Int) {
-        guard index >= 0 && index <= count else {
+        guard index >= 0, index <= count else {
             fatalError("Index out of range")
         }
         _storage.insert(item, at: index)
@@ -75,7 +77,7 @@ final class Queue<Element: Equatable>: Sequence, CustomDebugStringConvertible {
     /// Removes the item at the specified index in the queue
     @discardableResult
     func remove(at index: Int) -> Element? {
-        guard index >= 0 && index < count else {
+        guard index >= 0, index < count else {
             return nil
         }
         return _storage.remove(at: index)
@@ -96,6 +98,6 @@ final class Queue<Element: Equatable>: Sequence, CustomDebugStringConvertible {
     }
 
     var debugDescription: String {
-        return "Queue with elements: \(_storage)"
+        "Queue with elements: \(_storage)"
     }
 }

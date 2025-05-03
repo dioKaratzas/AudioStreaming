@@ -145,9 +145,9 @@ final class PlayerQueueEntries {
     private func queue(for type: PlayerQueueType) -> Queue<AudioEntry> {
         switch type {
         case .buffering:
-            return bufferring
+            bufferring
         case .upcoming:
-            return upcoming
+            upcoming
         }
     }
 }

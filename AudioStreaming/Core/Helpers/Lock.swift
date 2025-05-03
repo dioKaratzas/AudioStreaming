@@ -3,8 +3,8 @@
 //  Copyright © 2020 Decimal. All rights reserved.
 //
 
-import Foundation
 import os
+import Foundation
 
 protocol Lock {
     func lock()
@@ -22,7 +22,6 @@ protocol Lock {
 /// A wrapper for `os_unfair_lock`
 /// - Tag: UnfairLock
 final class UnfairLock: Lock {
-
     var unfairLock: Lock
 
     init() {
@@ -65,8 +64,7 @@ final class UnfairLock: Lock {
 @available(iOS 16.0, *)
 @available(macOS 13, *)
 private class OSStorageLock: Lock {
-    @usableFromInline
-    let osLock = OSAllocatedUnfairLock()
+    @usableFromInline let osLock = OSAllocatedUnfairLock()
 
     @inlinable
     func lock() {
@@ -90,9 +88,7 @@ private class OSStorageLock: Lock {
 }
 
 private class UnfairStorageLock: Lock {
-
-    @usableFromInline
-    let unfairLock: UnsafeMutablePointer<os_unfair_lock>
+    @usableFromInline let unfairLock: UnsafeMutablePointer<os_unfair_lock>
 
     init() {
         unfairLock = .allocate(capacity: 1)

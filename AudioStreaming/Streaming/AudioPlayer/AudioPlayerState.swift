@@ -35,21 +35,21 @@ func playerStateAndStopReason(
 ) -> (state: AudioPlayerState, stopReason: AudioPlayerStopReason?) {
     switch internalState {
     case .initial:
-        return (.ready, AudioPlayerStopReason.none)
+        (.ready, AudioPlayerStopReason.none)
     case .running, .playing, .waitingForDataAfterSeek:
-        return (.playing, AudioPlayerStopReason.none)
+        (.playing, AudioPlayerStopReason.none)
     case .pendingNext, .rebuffering, .waitingForData:
-        return (.bufferring, AudioPlayerStopReason.none)
+        (.bufferring, AudioPlayerStopReason.none)
     case .stopped:
-        return (.stopped, nil)
+        (.stopped, nil)
     case .paused:
-        return (.paused, AudioPlayerStopReason.none)
+        (.paused, AudioPlayerStopReason.none)
     case .disposed:
-        return (.disposed, .userAction)
+        (.disposed, .userAction)
     case .error:
-        return (.error, AudioPlayerStopReason.error)
+        (.error, AudioPlayerStopReason.error)
     default:
-        return (.ready, AudioPlayerStopReason.none)
+        (.ready, AudioPlayerStopReason.none)
     }
 }
 
@@ -85,17 +85,17 @@ public enum AudioPlayerError: LocalizedError, Equatable, Sendable {
     public var errorDescription: String? {
         switch self {
         case let .streamParseBytesFailure(status):
-            return "Couldn't parse the bytes from the stream. Status: \(status)"
+            "Couldn't parse the bytes from the stream. Status: \(status)"
         case let .audioSystemError(error):
-            return error.errorDescription
+            error.errorDescription
         case .codecError:
-            return "Codec error while parsing data packets"
+            "Codec error while parsing data packets"
         case .dataNotFound:
-            return "No data supplied from network stream"
+            "No data supplied from network stream"
         case let .networkError(error):
-            return error.localizedDescription
+            error.localizedDescription
         case .other:
-            return "Audio Player error"
+            "Audio Player error"
         }
     }
 }
@@ -106,16 +106,19 @@ public enum AudioSystemError: LocalizedError, Equatable, Sendable {
     case playerStartError
     case fileStreamError(AudioFileStreamError)
     case converterError(AudioConverterError)
+    case sessionActivation
 
     public var errorDescription: String? {
         switch self {
-        case .engineFailure: return "Audio engine couldn't start"
-        case .playerNotFound: return "Player not found"
-        case .playerStartError: return "Player couldn't start"
+        case .engineFailure: "Audio engine couldn't start"
+        case .playerNotFound: "Player not found"
+        case .playerStartError: "Player couldn't start"
         case let .fileStreamError(error):
-            return "Audio file stream error'd: \(error)"
+            "Audio file stream error'd: \(error)"
         case let .converterError(error):
-            return "Audio converter error'd: \(error)"
+            "Audio converter error'd: \(error)"
+        case .sessionActivation:
+            "Audio session couldn't be activated"
         }
     }
 }

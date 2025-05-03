@@ -12,8 +12,7 @@ class EQBand: Identifiable {
     var max: Float
     var value: Float
 
-    @ObservationIgnored
-    let index: Int
+    @ObservationIgnored let index: Int
 
     init(index: Int, frequency: String, min: Float, max: Float, value: Float) {
         self.index = index
@@ -53,7 +52,7 @@ struct EqualizerView: View {
                         HStack {
                             Image(systemName: model.isEnabled ? "waveform.slash" : "waveform")
                                 .contentTransition(.symbolEffect(.replace))
-                            Text(model.isEnabled ? "Disable": "Enable")
+                            Text(model.isEnabled ? "Disable" : "Enable")
                                 .font(.body)
                         }
                         .foregroundStyle(Color.white)
@@ -86,24 +85,24 @@ struct EqualizerView: View {
             }
             .navigationTitle("Equalizer")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+                .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(Color.gray)
-                    }
+                .toolbar {
+                    #if os(iOS)
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button {
+                                dismiss()
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(Color.gray)
+                            }
+                        }
+                    #else
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done", action: dismiss.callAsFunction)
+                        }
+                    #endif
                 }
-                #else
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: dismiss.callAsFunction)
-                }
-                #endif
-            }
         }
     }
 }
@@ -143,7 +142,7 @@ struct EQSliderView: View {
                             }
 
                         Path { path in
-                            for index in 0..<dragPointYLocations.count {
+                            for index in 0 ..< dragPointYLocations.count {
                                 let x = positionForDragPoint(at: index, size: innerGeo.size)
                                 path.move(to: CGPoint(x: x, y: 0))
                                 path.addLine(to: CGPoint(x: x, y: innerGeo.size.height))
@@ -182,7 +181,6 @@ struct EQSliderView: View {
                             .position(x: positionForDragPoint(at: band.index, size: innerGeo.size), y: innerGeo.size.height + 8)
                             .font(.caption)
                             .foregroundColor(.black)
-
                     }
                 }
             }
@@ -209,15 +207,13 @@ struct EQSliderView: View {
         withAnimation(.easeInOut(duration: 0.2)) {
             dragPointYLocations = reset
         }
-
     }
 }
 
 extension EqualizerView {
     @Observable
     class Model {
-        @ObservationIgnored
-        private let equalizerService: EqualizerService
+        @ObservationIgnored private let equalizerService: EqualizerService
 
         var dragPointYLocations: [CGFloat] = Array(repeating: .zero, count: 6)
 
@@ -285,9 +281,9 @@ struct LineShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         path.move(to: CGPoint(x: rect.size.width / 12, y: values.first ?? 0))
-        for index in 1..<values.count {
+        for index in 1 ..< values.count {
             let x = positionForDragPoint(at: index, size: rect.size)
-            let y =  values[index]
+            let y = values[index]
             path.addLine(to: CGPoint(x: x, y: y))
         }
         return path
@@ -298,11 +294,11 @@ struct LineShape: Shape {
     }
 }
 
-struct AnimatableLine : VectorArithmetic {
+struct AnimatableLine: VectorArithmetic {
     var values: [Double]
 
     var magnitudeSquared: Double {
-        return values.map { $0 * $0 }.reduce(0, +)
+        values.map { $0 * $0 }.reduce(0, +)
     }
 
     mutating func scale(by rhs: Double) {
@@ -310,11 +306,11 @@ struct AnimatableLine : VectorArithmetic {
     }
 
     static var zero: AnimatableLine {
-        return AnimatableLine(values: [0.0])
+        AnimatableLine(values: [0.0])
     }
 
     static func - (lhs: AnimatableLine, rhs: AnimatableLine) -> AnimatableLine {
-        return AnimatableLine(values: zip(lhs.values, rhs.values).map(-))
+        AnimatableLine(values: zip(lhs.values, rhs.values).map(-))
     }
 
     static func -= (lhs: inout AnimatableLine, rhs: AnimatableLine) {
@@ -322,7 +318,7 @@ struct AnimatableLine : VectorArithmetic {
     }
 
     static func + (lhs: AnimatableLine, rhs: AnimatableLine) -> AnimatableLine {
-        return AnimatableLine(values: zip(lhs.values, rhs.values).map(+))
+        AnimatableLine(values: zip(lhs.values, rhs.values).map(+))
     }
 
     static func += (lhs: inout AnimatableLine, rhs: AnimatableLine) {

@@ -51,7 +51,9 @@ class AudioEntry {
 
     private var averagePacketByteSize: Double {
         let packets = processedPacketsState
-        guard !packets.isEmpty else { return 0 }
+        guard !packets.isEmpty else {
+            return 0
+        }
         return Double(packets.sizeTotal / packets.count)
     }
 
@@ -107,8 +109,7 @@ class AudioEntry {
         if packetDuration > 0 {
             let packetsCount = packets.count
             if packetsCount > estimationMinPacketsPreferred ||
-                (audioStreamFormat.mBytesPerFrame == 0 && packetsCount > estimationMinPackets)
-            {
+                (audioStreamFormat.mBytesPerFrame == 0 && packetsCount > estimationMinPackets) {
                 return averagePacketByteSize / packetDuration * 8
             }
         }
@@ -147,7 +148,9 @@ class AudioEntry {
         if let byteCount = audioStreamState.dataByteCount {
             return UInt(byteCount)
         }
-        guard source.length > 0 else { return 0 }
+        guard source.length > 0 else {
+            return 0
+        }
         return UInt(source.length) - UInt(audioStreamState.dataOffset)
     }
 }

@@ -63,7 +63,9 @@ final class RemoteMp4Restructure {
     func optimizeIfNeeded(completion: @escaping (Result<RestructuredData?, Error>) -> Void) {
         task = networking.stream(request: urlForPartialContent(with: url, offset: 0))
             .responseStream { [weak self] event in
-                guard let self else { return }
+                guard let self else {
+                    return
+                }
                 switch event {
                 case .response:
                     break
@@ -117,7 +119,9 @@ final class RemoteMp4Restructure {
 
     func fetchAndRestructureMoovAtom(offset: Int, completion: @escaping (Result<(data: Data, offset: Int), Error>) -> Void) {
         networking.task(request: urlForPartialContent(with: url, offset: offset)) { [weak self] result in
-            guard let self else { return }
+            guard let self else {
+                return
+            }
             switch result {
             case let .success(data):
                 do {

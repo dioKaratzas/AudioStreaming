@@ -22,12 +22,14 @@ public struct AudioPlayerConfiguration: Equatable {
     /// Enables the internal logs
     let enableLogs: Bool
 
-    public static let `default` = AudioPlayerConfiguration(flushQueueOnSeek: false,
-                                                           bufferSizeInSeconds: 10,
-                                                           secondsRequiredToStartPlaying: 1,
-                                                           gracePeriodAfterSeekInSeconds: 0.5,
-                                                           secondsRequiredToStartPlayingAfterBufferUnderrun: 7,
-                                                           enableLogs: false)
+    public static let `default` = AudioPlayerConfiguration(
+        flushQueueOnSeek: false,
+        bufferSizeInSeconds: 10,
+        secondsRequiredToStartPlaying: 1,
+        gracePeriodAfterSeekInSeconds: 0.5,
+        secondsRequiredToStartPlayingAfterBufferUnderrun: 7,
+        enableLogs: false
+    )
     /// Initializes the configuration for the `AudioPlayer`
     ///
     /// Parameters are pre set for convenience
@@ -39,13 +41,14 @@ public struct AudioPlayerConfiguration: Equatable {
     /// - parameter secondsRequiredToStartPlayingAfterBufferUnderrun: Number of seconds of audio required to before playback resumes after a buffer underrun
     /// - parameter enableLogs: Enables the internal logs
     ///
-    public init(flushQueueOnSeek: Bool = true,
-                bufferSizeInSeconds: Double = 10,
-                secondsRequiredToStartPlaying: Double = 1,
-                gracePeriodAfterSeekInSeconds: Double = 0.5,
-                secondsRequiredToStartPlayingAfterBufferUnderrun: Int = 1,
-                enableLogs: Bool = false)
-    {
+    public init(
+        flushQueueOnSeek: Bool = true,
+        bufferSizeInSeconds: Double = 10,
+        secondsRequiredToStartPlaying: Double = 1,
+        gracePeriodAfterSeekInSeconds: Double = 0.5,
+        secondsRequiredToStartPlayingAfterBufferUnderrun: Int = 1,
+        enableLogs: Bool = false
+    ) {
         self.flushQueueOnSeek = flushQueueOnSeek
         self.bufferSizeInSeconds = bufferSizeInSeconds
         self.secondsRequiredToStartPlaying = secondsRequiredToStartPlaying
@@ -74,11 +77,13 @@ public struct AudioPlayerConfiguration: Equatable {
             ? defaults.secondsRequiredToStartPlayingAfterBufferUnderrun
             : self.secondsRequiredToStartPlayingAfterBufferUnderrun
 
-        return AudioPlayerConfiguration(flushQueueOnSeek: flushQueueOnSeek,
-                                        bufferSizeInSeconds: bufferSizeInSeconds,
-                                        secondsRequiredToStartPlaying: secondsRequiredToStartPlaying,
-                                        gracePeriodAfterSeekInSeconds: gracePeriodAfterSeekInSeconds,
-                                        secondsRequiredToStartPlayingAfterBufferUnderrun: secondsRequiredToStartPlayingAfterBufferUnderrun,
-                                        enableLogs: enableLogs)
+        return AudioPlayerConfiguration(
+            flushQueueOnSeek: flushQueueOnSeek,
+            bufferSizeInSeconds: bufferSizeInSeconds,
+            secondsRequiredToStartPlaying: secondsRequiredToStartPlaying,
+            gracePeriodAfterSeekInSeconds: gracePeriodAfterSeekInSeconds,
+            secondsRequiredToStartPlayingAfterBufferUnderrun: secondsRequiredToStartPlayingAfterBufferUnderrun,
+            enableLogs: enableLogs
+        )
     }
 }
