@@ -159,10 +159,10 @@ final class Mp4Restructure {
             }
             if ftyp != nil {
                 if foundMoov, !foundMdat {
-                    Logger.debug("🕵️ detected an optimized mp4", category: .generic)
+                    logger(.generic).debug("🕵️ detected an optimized mp4")
                     return nil
                 } else if !foundMoov, foundMdat {
-                    Logger.debug("🕵️ detected an non-optimized mp4", category: .generic)
+                    logger(.generic).debug("🕵️ detected an non-optimized mp4")
                     let possibleMoovOffset = Int(atomOffset) + atomSize
                     return Mp4OptimizeInfo(moovOffset: possibleMoovOffset, moovSize: atomSize)
                 }
@@ -202,7 +202,7 @@ final class Mp4Restructure {
         moovAtom.rewind()
 
         if try Int(moovAtom.getInteger(12) as UInt32) == Atoms.cmov {
-            Logger.debug("Compressed moov atom not supported", category: .generic)
+            logger(.generic).debug("Compressed moov atom not supported")
             throw Mp4RestructureError.compressedAtomNotSupported
         }
 
@@ -221,14 +221,14 @@ final class Mp4Restructure {
 
             atomSize = try Int(moovAtom.getInteger(atomHead) as UInt32)
             if atomSize > moovAtom.bytesAvailable {
-                Logger.debug("aborting due to a bad size on an atom", category: .generic)
+                logger(.generic).debug("aborting due to a bad size on an atom")
                 throw Mp4RestructureError.unableToRestructureData
             }
             // we need to skip the offset by `12` which come from the bytes of [size/4][type/4][version/1][flags/3]
             // more info https://developer.apple.com/documentation/quicktime-file-format/chunk_offset_atom
             moovAtom.offset = atomHead + 12
             if moovAtom.bytesAvailable < 4 {
-                Logger.debug("aborting due to a malformed atom", category: .generic)
+                logger(.generic).debug("aborting due to a malformed atom")
                 throw Mp4RestructureError.unableToRestructureData
             }
 
@@ -236,9 +236,9 @@ final class Mp4Restructure {
             // https://developer.apple.com/documentation/quicktime-file-format/chunk_offset_atom/number_of_entries
             let numberOfOffsetEntries = try Int(moovAtom.getInteger() as UInt32)
             if atomType == Atoms.stco {
-                Logger.debug("🏗️ patching stco atom...", category: .generic)
+                logger(.generic).debug("🏗️ patching stco atom...")
                 if moovAtom.bytesAvailable < numberOfOffsetEntries * 4 {
-                    Logger.debug("aborting due to bad atom..", category: .generic)
+                    logger(.generic).debug("aborting due to bad atom..")
                     throw Mp4RestructureError.unableToRestructureData
                 }
 
@@ -253,9 +253,9 @@ final class Mp4Restructure {
                     moovAtom.put(UInt32(adjustOffset).bigEndian)
                 }
             } else if atomType == Atoms.co64 {
-                Logger.debug("🏗️ patching co64 atom...", category: .generic)
+                logger(.generic).debug("🏗️ patching co64 atom...")
                 if moovAtom.bytesAvailable < numberOfOffsetEntries * 8 {
-                    Logger.debug("aborting due to bad atom..", category: .generic)
+                    logger(.generic).debug("aborting due to bad atom..")
                     throw Mp4RestructureError.unableToRestructureData
                 }
                 for _ in 0 ..< numberOfOffsetEntries {

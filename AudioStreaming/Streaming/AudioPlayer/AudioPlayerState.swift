@@ -107,6 +107,7 @@ public enum AudioSystemError: LocalizedError, Equatable, Sendable {
     case fileStreamError(AudioFileStreamError)
     case converterError(AudioConverterError)
     case sessionActivation
+    case sessionSetupFailed
 
     public var errorDescription: String? {
         switch self {
@@ -119,6 +120,8 @@ public enum AudioSystemError: LocalizedError, Equatable, Sendable {
             "Audio converter error'd: \(error)"
         case .sessionActivation:
             "Audio session couldn't be activated"
+        case .sessionSetupFailed:
+            "Audio session setup failed"
         }
     }
 }

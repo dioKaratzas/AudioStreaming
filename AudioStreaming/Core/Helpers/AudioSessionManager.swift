@@ -24,9 +24,6 @@
         /// Delegate to handle audio session interruptions and route changes
         public weak var interruptionDelegate: AudioSessionInterruptionDelegate?
 
-        /// A Boolean value indicating whether background mode is enabled
-        public var backgroundMode = true
-
         /// A Boolean value indicating whether the audio session is active
         private(set) var isSessionActive = false
 
@@ -46,11 +43,11 @@
         ///
         /// - Parameter active: A Boolean value indicating whether to activate the audio session
         /// - Throws: An error if the audio session could not be configured
-        public func setupSession(active: Bool) throws {
+        public func setupSession(active: Bool) {
             let session = AVAudioSession.sharedInstance()
 
-            try session.setCategory(.playback, mode: .default, options: [.allowBluetooth, .allowAirPlay])
-            try session.setActive(active)
+            try? session.setCategory(.playback, mode: .default, options: [.allowBluetooth, .allowAirPlay, .mixWithOthers])
+            try? session.setActive(active)
 
             isSessionActive = active
         }
@@ -58,18 +55,18 @@
         /// Activates the audio session
         ///
         /// - Throws: An error if the audio session could not be activated
-        public func activateSession() throws {
+        public func activateSession() {
             if !isSessionActive {
-                try setupSession(active: true)
+                setupSession(active: true)
             }
         }
 
         /// Deactivates the audio session
         ///
         /// - Throws: An error if the audio session could not be deactivated
-        public func deactivateSession() throws {
+        public func deactivateSession() {
             if isSessionActive {
-                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+                try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
                 isSessionActive = false
             }
         }

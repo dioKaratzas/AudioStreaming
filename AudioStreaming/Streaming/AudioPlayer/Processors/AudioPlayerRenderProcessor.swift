@@ -33,10 +33,8 @@ final class AudioPlayerRenderProcessor: NSObject {
             do {
                 try player.auAudioUnit.inputBusses[0].setFormat(audioFormat)
             } catch {
-                Logger.error(
-                    "Player auAudioUnit inputbus failure %@",
-                    category: .audioRendering,
-                    args: error.localizedDescription
+                logger(.audioRendering).error(
+                    "Player auAudioUnit inputbus failure \(error.localizedDescription)"
                 )
             }
         }
@@ -296,13 +294,13 @@ final class AudioPlayerRenderProcessor: NSObject {
             case .insufficientDataFromInputNode:
                 return noErr
             case .cannotDoInCurrentContext:
-                Logger.error("cannotDoInCurrentContext", category: .audioRendering)
+                logger(.audioRendering).error("cannotDoInCurrentContext")
                 return 0
             case .error:
-                Logger.error("generic error", category: .audioRendering)
+                logger(.audioRendering).error("generic error")
                 return 0
             @unknown default:
-                Logger.error("unknown error", category: .audioRendering)
+                logger(.audioRendering).error("unknown error")
                 return 0
             }
         }

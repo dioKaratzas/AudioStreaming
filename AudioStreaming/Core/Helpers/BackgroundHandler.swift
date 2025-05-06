@@ -2,95 +2,118 @@
 //  BackgroundHandler.swift
 //  AppModules
 //
-//  Created by Dionisis Karatzas on 1/5/25.
+//  Created by Dionisis Karatzas on 1 May 2025.
+//  Simplified, thread-safe: 7 May 2025
 //
 
 #if os(OSX)
-    import Foundation
+    import Foundation // No background-task API on macOS
 #else
     import UIKit
 #endif
 
-#if !os(OSX)
-    /// Protocol for background task operations
-    protocol BackgroundTaskCreator {
-        func beginBackgroundTask(expirationHandler handler: (() -> Void)?) -> UIBackgroundTaskIdentifier
-        func endBackgroundTask(_ identifier: UIBackgroundTaskIdentifier)
-    }
-
-    // Make UIApplication conform to our protocol
-    extension UIApplication: BackgroundTaskCreator {
-        func beginBackgroundTask(expirationHandler handler: (() -> Void)?) -> UIBackgroundTaskIdentifier {
-            beginBackgroundTask(withName: "BackgroundTask", expirationHandler: handler)
+/// A tiny wrapper around `beginBackgroundTask` / `endBackgroundTask`.
+/// Call it from **any** queue; it hops to the main queue when needed.
+final class BackgroundHandler: @unchecked Sendable {
+    // MARK: – RAII token
+    final class Token {
+        private weak var owner: BackgroundHandler?
+        fileprivate init(_ owner: BackgroundHandler) { self.owner = owner }
+        public func end() {
+            #if !os(macOS)
+                owner?.endBackgroundTask()
+            #endif
         }
+
+        deinit { end() }
     }
-#endif
 
-/// A class that handles background tasks to prevent iOS from suspending the app while tasks are ongoing.
-final class BackgroundHandler: Sendable {
     #if !os(OSX)
-        /// The background task creator, typically `UIApplication.shared`.
-        var backgroundTaskCreator: BackgroundTaskCreator = UIApplication.shared
+        private let app: UIApplication = .shared
+        private var taskID: UIBackgroundTaskIdentifier?
+    #endif
+    private var counter: UInt = 0
 
-        /// The background task identifier if a background task has started. `nil` if not.
-        @SynchronizedLock private var taskIdentifier: UIBackgroundTaskIdentifier?
-    #else
-        /// On macOS, background tasks are not supported in the same way as iOS, so we just use an integer identifier.
-        @SynchronizedLock private var taskIdentifier: Int?
+    // MARK: – Public API -------------------------------------------------------
+
+    #if !os(OSX)
+
+        /// Begin a task **only when the app is already in the background**.
+        @discardableResult
+        func beginIfBackgrounded(reason: String = "unspecified") -> Token? {
+            if !Thread.isMainThread { // hop once if caller is off-main
+                return DispatchQueue.main.sync { beginIfBackgrounded(reason: reason) }
+            }
+
+            guard app.applicationState != .active else {
+                return nil
+            }
+            return beginBackgroundTask(reason: reason)
+        }
+
+        /// Begin a task unconditionally (foreground or background).
+        @discardableResult
+        func beginBackgroundTask(reason: String = "unspecified") -> Token? {
+            counter += 1
+            if taskID != nil {
+                return Token(self)
+            } // nested begin
+
+            var createdID: UIBackgroundTaskIdentifier = .invalid
+            let register: () -> Void = { [weak self] in
+                guard let self else {
+                    return
+                }
+                let remaining = self.app.backgroundTimeRemaining
+                createdID = self.app.beginBackgroundTask(withName: reason) { [weak self] in
+                    self?.endBackgroundTask(expired: true)
+                }
+                if createdID != .invalid {
+                    self.taskID = createdID
+                    logger(.backgroundHandler).debug("Begin \(reason) - remaining: \(remaining) s - counter: \(self.counter)")
+                }
+            }
+            Thread.isMainThread ? register() : DispatchQueue.main.sync(execute: register)
+
+            if createdID == .invalid { // system refused
+                counter -= 1
+                return nil
+            }
+            return Token(self)
+        }
+
+        /// Finish one reference; ends the system task when the ref-count hits 0.
+        @discardableResult
+        func endBackgroundTask(expired: Bool = false) -> Bool {
+            guard let id = taskID else {
+                return false
+            }
+            counter = counter > 0 ? counter - 1 : 0
+            if counter > 0 {
+                return false
+            }
+
+            let finish: () -> Void = { [weak self] in
+                guard let self else {
+                    return
+                }
+                self.app.endBackgroundTask(id)
+                let remaining = self.app.backgroundTimeRemaining
+                let tag = expired ? "🟠 Expired" : "🟢 End"
+
+                logger(.backgroundHandler).debug("Task \(tag) \(id.rawValue) – remaining: \(remaining) s")
+            }
+            Thread.isMainThread ? finish() : DispatchQueue.main.sync(execute: finish)
+
+            taskID = nil
+            return true
+        }
+
     #endif
 
-    /// The number of background task requests received. When this counter hits 0, the background task, if any, will be terminated.
-    @SynchronizedLock private var counter = 0
-
-    /// Ends the background task, if any, upon deinitialization.
     deinit {
-        endBackgroundTask()
-    }
-
-    /// Starts a background task if one isn't already active.
-    ///
-    /// - Returns: A boolean value indicating whether a background task was created.
-    @discardableResult
-    func beginBackgroundTask() -> Bool {
-        #if os(OSX)
-            return false
-        #else
-            counter += 1
-
-            guard taskIdentifier == nil else {
-                return false
-            }
-
-            taskIdentifier = backgroundTaskCreator.beginBackgroundTask { [weak self] in
-                self?.endBackgroundTask()
-            }
-
-            return taskIdentifier != UIBackgroundTaskIdentifier.invalid
-        #endif
-    }
-
-    /// Ends the background task if there is one.
-    ///
-    /// - Returns: A boolean value indicating whether the background task was ended.
-    @discardableResult
-    func endBackgroundTask() -> Bool {
-        #if os(OSX)
-            return false
-        #else
-            guard let taskIdentifier else {
-                return false
-            }
-
-            counter -= 1
-
-            guard counter == 0 else {
-                return false
-            }
-            if taskIdentifier != UIBackgroundTaskIdentifier.invalid {
-                backgroundTaskCreator.endBackgroundTask(taskIdentifier)
-            }
-            self.taskIdentifier = nil
-            return true
+        #if !os(macOS)
+            _ = endBackgroundTask()
         #endif
     }
 }

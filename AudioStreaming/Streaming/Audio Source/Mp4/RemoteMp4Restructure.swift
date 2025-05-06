@@ -80,7 +80,7 @@ final class RemoteMp4Restructure {
                         let value = try self.mp4Restructure.checkIsOptimized(data: self.audioData)
                         if let value {
                             guard response.response?.statusCode == 206 else {
-                                Logger.error("⛔️ mp4 error: no moov before mdat and the stream is not seekable", category: .networking)
+                                logger(.generic).error("⛔️ mp4 error: no moov before mdat and the stream is not seekable")
                                 completion(.failure(Mp4RestructureError.nonOptimizedMp4AndServerCannotSeek))
                                 return
                             }

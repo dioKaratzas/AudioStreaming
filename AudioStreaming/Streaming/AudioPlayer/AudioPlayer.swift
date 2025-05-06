@@ -136,6 +136,18 @@ open class AudioPlayer {
 
     private let entryProvider: AudioEntryProviding
 
+    /// The background handler for managing background tasks
+    private let backgroundHandler = BackgroundHandler()
+
+    /// The session manager for handling audio session interruptions and route changes
+    #if !os(macOS)
+        private let audioSessionManager = AudioSessionManager.shared
+    #endif
+
+    // MARK: - Properties
+    private var startupToken: BackgroundHandler.Token?
+    private var transientToken: BackgroundHandler.Token?
+
     var entriesQueue: PlayerQueueEntries
 
     public init(configuration: AudioPlayerConfiguration = .default) {
@@ -172,6 +184,10 @@ open class AudioPlayer {
                 engine.mainMixerNode
             }
         )
+
+        #if !os(macOS)
+            audioSessionManager.interruptionDelegate = self
+        #endif
         configPlayerContext()
         configPlayerNode()
         setupEngine()
@@ -214,6 +230,10 @@ open class AudioPlayer {
     private func play(audioEntry: AudioEntry) {
         audioEntry.delegate = self
 
+        #if !os(macOS)
+            startupToken = backgroundHandler.beginIfBackgrounded(reason: "startPlayback")
+            audioSessionManager.activateSession()
+        #endif
         checkRenderWaitingAndNotifyIfNeeded()
         serializationQueue.sync {
             clearQueue()
@@ -395,12 +415,16 @@ open class AudioPlayer {
         guard playerContext.internalState == .paused else {
             return
         }
+        #if !os(macOS)
+            startupToken = backgroundHandler.beginIfBackgrounded(reason: "resumePlayback")
+            audioSessionManager.activateSession()
+        #endif
         playerContext.setInternalState(to: stateBeforePaused)
         serializationQueue.sync {
             do {
                 try startEngine()
             } catch {
-                Logger.debug("resuming audio engine failed: %@", category: .generic, args: error.localizedDescription)
+                logger(.generic).error("resuming audio engine failed: \(error.localizedDescription)")
             }
             if let playingEntry = playerContext.audioReadingEntry {
                 if playingEntry.seekRequest.requested {
@@ -507,7 +531,7 @@ open class AudioPlayer {
             audioEngine.prepare()
             try audioEngine.start()
         } catch {
-            Logger.error("⚠️ error setting up audio engine: %@", category: .generic, args: error.localizedDescription)
+            logger(.generic).error("⚠️ error setting up audio engine:  \(error.localizedDescription)")
         }
     }
 
@@ -602,10 +626,20 @@ open class AudioPlayer {
     /// - Throws: An `Error` when failed to start the engine.
     private func startEngineIfNeeded() throws {
         guard !isEngineRunning else {
-            Logger.debug("engine already running 🛵", category: .generic)
+            logger(.generic).debug("engine already running 🛵")
             return
         }
+
+        // Ensure we still hold a task & an active session when the engine boots.
+        #if !os(macOS)
+            transientToken = backgroundHandler.beginIfBackgrounded(reason: "engineStart")
+            if !audioSessionManager.isSessionActive {
+                audioSessionManager.activateSession()
+            }
+        #endif
         try startEngine()
+
+        transientToken = nil
     }
 
     /// Force starts the engine
@@ -613,7 +647,7 @@ open class AudioPlayer {
     /// - Throws: An `Error` when failed to start the engine.
     private func startEngine() throws {
         try audioEngine.start()
-        Logger.debug("engine started 🛵", category: .generic)
+        logger(.generic).debug("engine started 🛵")
     }
 
     /// Pauses the audio engine and stops the player's hardware
@@ -624,19 +658,32 @@ open class AudioPlayer {
         audioEngine.reset()
         audioEngine.pause()
         player.auAudioUnit.stopHardware()
-        Logger.debug("engine paused ⏸", category: .generic)
+        logger(.generic).debug("engine paused ⏸")
     }
 
     /// Stops the audio engine and the player's hardware
     ///
     /// - parameter reason: A value of `AudioPlayerStopReason` indicating the reason the engine stopped.
     private func stopEngine(reason: AudioPlayerStopReason) {
+        startupToken = nil
+        transientToken = nil
+
+        #if !os(macOS)
+            backgroundHandler.endBackgroundTask()
+            audioSessionManager.deactivateSession()
+        #endif
+
         audioEngine.stop()
         player.auAudioUnit.stopHardware()
         rendererContext.resetBuffers()
         playerContext.setInternalState(to: .stopped)
         playerContext.stopReason.write { $0 = reason }
-        Logger.debug("engine stopped 🛑", category: .generic)
+        logger(.generic).debug("engine stopped 🛑")
+    }
+
+    /// Called exactly once when we know audio is flowing.
+    private func engineDidBeginOutput() {
+        startupToken = nil // dropping the token ends the task cleanly
     }
 
     /// Starts the audio player, resetting the buffers if requested
@@ -650,6 +697,7 @@ open class AudioPlayer {
             try startEngineIfNeeded()
             try player.auAudioUnit.allocateRenderResources()
             try player.auAudioUnit.startHardware()
+            engineDidBeginOutput()
         } catch {
             stopEngine(reason: .error)
             raiseUnexpected(error: .audioSystemError(.playerStartError))
@@ -735,7 +783,7 @@ open class AudioPlayer {
         guard let entry else {
             return
         }
-        Logger.debug("Setting current reading entry to: %@", category: .generic, args: entry.debugDescription)
+        logger(.generic).debug("Setting current reading entry to: \(entry.debugDescription)")
         if startPlaying {
             rendererContext.fillSilenceAudioBuffer()
         }
@@ -876,7 +924,7 @@ open class AudioPlayer {
             }
             self.delegate?.audioPlayerUnexpectedError(player: self, error: error)
         }
-        Logger.error("Error: %@", category: .generic, args: error.localizedDescription)
+        logger(.generic).error("Error: \(error.localizedDescription)")
     }
 }
 
@@ -970,3 +1018,47 @@ extension AudioPlayer: AudioStreamSourceDelegate {
         }
     }
 }
+
+#if !os(macOS)
+    extension AudioPlayer: AudioSessionInterruptionDelegate {
+        // MARK: - Interruption
+        public func handleInterruption(
+            type: AVAudioSession.InterruptionType,
+            options: AVAudioSession.InterruptionOptions
+        ) {
+            switch type {
+            case .began:
+                pause()
+                transientToken = backgroundHandler.beginIfBackgrounded(
+                    reason: "intBegan")
+                /* quick persistence / analytics if you want */
+                transientToken = nil
+
+            case .ended where options.contains(.shouldResume):
+                transientToken = backgroundHandler.beginIfBackgrounded(
+                    reason: "intEnded")
+                audioSessionManager.activateSession()
+                resume()
+                transientToken = nil
+
+            default:
+                break
+            }
+        }
+
+        // MARK: - Route change
+        public func handleRouteChange(
+            reason: AVAudioSession.RouteChangeReason,
+            previousRoute: AVAudioSessionRouteDescription
+        ) {
+            guard reason == .oldDeviceUnavailable || reason == .newDeviceAvailable else {
+                return
+            }
+
+            transientToken = backgroundHandler.beginIfBackgrounded(reason: "routeChange")
+            reattachCustomNodes() // rebuild graph
+            try? startEngineIfNeeded() // restarts engine if necessary
+            transientToken = nil
+        }
+    }
+#endif

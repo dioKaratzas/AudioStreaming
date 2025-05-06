@@ -70,7 +70,7 @@ final class AudioFileStreamProcessor {
     /// Closes the currently open `AudioFileStream` instance, if opened.
     func closeFileStreamIfNeeded() {
         guard let fileStream = audioFileStream else {
-            Logger.debug("audio file stream not opened", category: .generic)
+            logger(.generic).debug("audio file stream not opened")
             return
         }
         AudioFileStreamClose(fileStream)
@@ -173,7 +173,7 @@ final class AudioFileStreamProcessor {
         if audioConverter == nil {
             let audioConverterStatus = AudioConverterNew(&inputFormat, &outputFormat, &audioConverter)
             guard audioConverterStatus == noErr else {
-                let audioConverterError = AudioConverterError(osstatus: audioConverterStatus)
+                let audioConverterError = AudioConverterError(osStatus: audioConverterStatus)
                 fileStreamCallback?(.raiseError(.audioSystemError(.converterError(audioConverterError))))
                 return
             }
@@ -400,7 +400,7 @@ final class AudioFileStreamProcessor {
         }
 
         guard let converter = audioConverter else {
-            Logger.error("Couldn't find audio converter", category: .audioRendering)
+            logger(.audioRendering).error("Couldn't find audio converter")
             return
         }
 

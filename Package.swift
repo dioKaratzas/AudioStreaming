@@ -5,9 +5,8 @@ import PackageDescription
 let package = Package(
     name: "AudioStreaming",
     platforms: [
-        .iOS(.v12),
+        .iOS(.v14),
         .macOS(.v13),
-        .tvOS(.v16)
     ],
     products: [
         .library(
@@ -15,9 +14,15 @@ let package = Package(
             targets: ["AudioStreaming"]
         ),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.6.3"),
+    ],
     targets: [
         .target(
             name: "AudioStreaming",
+            dependencies: [
+                .product(name: "Logging", package: "swift-log")
+            ],
             path: "AudioStreaming"
         ),
         .testTarget(
