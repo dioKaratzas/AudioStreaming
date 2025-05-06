@@ -12,6 +12,7 @@ enum Logger {
     private static let audioRendering = OSLog(subsystem: loggingSubsystem, category: "audio.rendering")
     private static let networking = OSLog(subsystem: loggingSubsystem, category: "audio.networking")
     private static let generic = OSLog(subsystem: loggingSubsystem, category: "audio.streaming.generic")
+    private static let backgroundHandler = OSLog(subsystem: loggingSubsystem, category: "audio.streaming.backgroundHandler")
 
     /// Defines is the the logger displays any logs
     static var isEnabled = true
@@ -19,6 +20,7 @@ enum Logger {
     enum Category: CaseIterable {
         case audioRendering
         case networking
+        case backgroundHandler
         case generic
 
         func toOSLog() -> OSLog {
@@ -26,6 +28,7 @@ enum Logger {
             case .audioRendering: Logger.audioRendering
             case .networking: Logger.networking
             case .generic: Logger.generic
+            case .backgroundHandler: Logger.backgroundHandler
             }
         }
     }

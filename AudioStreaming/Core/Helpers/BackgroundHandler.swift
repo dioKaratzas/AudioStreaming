@@ -1,81 +1,91 @@
-//
-//  BackgroundHandler.swift
-//  AppModules
-//
-//  Created by Dionisis Karatzas on 1/5/25.
-//
-
 #if os(OSX)
-    import Foundation
+import Foundation
 #else
-    import UIKit
+import UIKit
 #endif
 
-/// A class that handles background tasks to prevent iOS from suspending the app while tasks are ongoing.
-final class BackgroundHandler: @unchecked Sendable {
-    #if !os(OSX)
-        /// The background task creator, typically `UIApplication.shared`.
-        let backgroundTaskCreator: UIApplication = .shared
+actor BackgroundHandler {
 
-        /// The background task identifier if a background task has started. `nil` if not.
-        @SynchronizedLock private var taskIdentifier: UIBackgroundTaskIdentifier?
-    #else
-        /// On macOS, background tasks are not supported in the same way as iOS, so we just use an integer identifier.
-        @SynchronizedLock private var taskIdentifier: Int?
-    #endif
+    // MARK: - Public helper object
+    public final class BackgroundTask {
+        private weak var handler: BackgroundHandler?
+        private let id: UIBackgroundTaskIdentifier
 
-    /// The number of background task requests received. When this counter hits 0, the background task, if any, will be terminated.
-    @SynchronizedLock private var counter = 0
+        fileprivate init(handler: BackgroundHandler, id: UIBackgroundTaskIdentifier) {
+            self.handler = handler
+            self.id      = id
+        }
 
-    /// Ends the background task, if any, upon deinitialization.
-    deinit {
-        endBackgroundTask()
+        public func end() {
+            Task { await handler?.endBackgroundTask(id: id) }
+        }
+
+        deinit { end() }
     }
 
-    /// Starts a background task if one isn't already active.
-    ///
-    /// - Returns: A boolean value indicating whether a background task was created.
+    // MARK: - Private state
+    #if !os(OSX)
+    private let application: UIApplication = .shared
+    private var activeIDs: Set<UIBackgroundTaskIdentifier> = []
+    #endif
+
+    // MARK: - API
     @discardableResult
-    func beginBackgroundTask() -> Bool {
+    nonisolated
+    func begin(reason: StaticString = "unspecified") -> BackgroundTask? {
         #if os(OSX)
-            return false
+        return nil
         #else
-            counter += 1
+        let remaining = application.backgroundTimeRemaining
+        let id = application.beginBackgroundTask(withName: "\(reason)") { [weak self] in
+            Task { await self?.endBackgroundTask(id: id, expired: true) }
+        }
 
-            guard taskIdentifier == nil else {
-                return false
-            }
+        guard id != .invalid else { return nil }
 
-            taskIdentifier = backgroundTaskCreator.beginBackgroundTask { [weak self] in
-                self?.endBackgroundTask()
-            }
+        // Register the ID **on the actor**.
+        Task { await self.register(id: id, remaining: remaining, reason: reason) }
 
-            return taskIdentifier != UIBackgroundTaskIdentifier.invalid
+        return BackgroundTask(handler: self, id: id)
         #endif
     }
 
-    /// Ends the background task if there is one.
-    ///
-    /// - Returns: A boolean value indicating whether the background task was ended.
-    @discardableResult
-    func endBackgroundTask() -> Bool {
-        #if os(OSX)
-            return false
-        #else
-            guard let taskIdentifier else {
-                return false
-            }
+    fileprivate func endBackgroundTask(id: UIBackgroundTaskIdentifier,
+                                       expired: Bool = false) {
+        #if !os(OSX)
+        guard activeIDs.remove(id) != nil else { return }
 
-            counter -= 1
+        let remaining = application.backgroundTimeRemaining
+        if expired {
+            Logger.debug("🟠 Expired task %d – remaining: %.1f s",
+                         category: .backgroundHandler,
+                         args: id.rawValue, remaining)
+        } else {
+            Logger.debug("🟢 End   task %d – remaining: %.1f s (%d left)",
+                         category: .backgroundHandler,
+                         args: id.rawValue, remaining, activeIDs.count)
+        }
 
-            guard counter == 0 else {
-                return false
-            }
-            if taskIdentifier != UIBackgroundTaskIdentifier.invalid {
-                backgroundTaskCreator.endBackgroundTask(taskIdentifier)
-            }
-            self.taskIdentifier = nil
-            return true
+        application.endBackgroundTask(id)
+        #if DEBUG
+        assert(!activeIDs.contains(id), "Background task \(id) leaked!")
+        #endif
+        #endif
+    }
+
+    // MARK: - Actor-isolated helper
+    private func register(id: UIBackgroundTaskIdentifier,
+                          remaining: TimeInterval,
+                          reason: StaticString) {
+        activeIDs.insert(id)
+        Logger.debug("🔵 Begin [%{public}s] – remaining: %.1f s (%d active)",
+                     category: .backgroundHandler,
+                     args: "\(reason)", remaining, activeIDs.count)
+    }
+
+    deinit {
+        #if !os(OSX)
+        for id in activeIDs { application.endBackgroundTask(id) }
         #endif
     }
 }
