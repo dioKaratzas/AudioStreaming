@@ -29,7 +29,7 @@ final class AudioPlayerRenderProcessor: NSObject {
     }
 
     func attachCallback(on player: AVAudioUnit, audioFormat: AVAudioFormat) {
-        if !player.auAudioUnit.inputBusses.isEmpty {
+        if player.auAudioUnit.inputBusses.count > 0 {
             do {
                 try player.auAudioUnit.inputBusses[0].setFormat(audioFormat)
             } catch {

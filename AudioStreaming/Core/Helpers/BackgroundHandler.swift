@@ -1,9 +1,9 @@
 //
 //  BackgroundHandler.swift
-//  AppModules
+//  AudioStreaming
 //
-//  Created by Dionisis Karatzas on 1 May 2025.
-//  Simplified, thread-safe: 7 May 2025
+//  Created by Dionisis Karatzas.
+//  Copyright © 2025 Dionisis Karatzas. All rights reserved.
 //
 
 #if os(OSX)
